@@ -16,6 +16,15 @@
         </dependencies>
     </dependencyManagement>
 
+    <repositories>
+        <repository>
+            <id>localrep</id>
+            <name>local repository</name>
+            <url>file:${project.basedir}/lib</url>
+        </repository>
+    </repositories>
+
+
     <dependencies>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -29,11 +38,20 @@
             <artifactId>maven-surefire-plugin</artifactId>
             <version>3.5.0</version>
         </dependency>
+
+        <dependency>
+            <groupId>lib.syspro</groupId>
+            <artifactId>SysProLib</artifactId>
+            <version>1.0</version>
+        </dependency>
     </dependencies>
 
     <properties>
-        <java.version>21</java.version>
+        <java.version>23</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
     </properties>
+
 
     <build>
     <plugins>
