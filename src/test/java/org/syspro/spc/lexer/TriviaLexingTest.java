@@ -210,15 +210,53 @@ public class TriviaLexingTest {
 
         Assertions.assertEquals(expected, result);
     }
+    @Test
+    @DisplayName("Alone and suffering comment")
+    public void singleCom() {
+        String input = """
+                  # why we still here 
+                """;
+        SpcLexer lex = new SpcLexer();
+        SpcLexer.ResultOfLexing resultOfLexing = lex.spcLex(input);
+        List<Logger.Log> result = (resultOfLexing).logger.toList();
+        List<Token> tokens = (resultOfLexing).lex_result;
+
+        Assertions.assertEquals(0, tokens.size());
+
+
+        //Assertions.assertEquals(expected, result);
+
+    }
 
 
     @Test
     @DisplayName("Tricky indentation and commentaries")
     public void trickyIndentation() {
-        /*
-        \n__# *comment*\n___
-         */
-        String input1 = "Pixies\n  \n   # Where is my mind\n  Song";
-        String input2 = "Low\n   \n # Down";
+        String input = """
+                .
+                \t.
+                \t\t.
+                \t\t\t
+                .""";
+        SpcLexer lex = new SpcLexer();
+        SpcLexer.ResultOfLexing resultOfLexing = lex.spcLex(input);
+        List<Logger.Log> result = (resultOfLexing).logger.toList();
+        List<Token> tokens = (resultOfLexing).lex_result;
+
+        List<Logger.Log> expected = List.of(
+                new Logger.Log(0,0,0, 0,"."),
+                new Logger.Log(1,1, 0,0, "<INDENT>"),
+                new Logger.Log(1,3,2, 0,"."),
+                new Logger.Log(4,4, 0,0, "<INDENT>"),
+                new Logger.Log(4,7,3, 0,"."),
+                new Logger.Log(20,20, 0,0, "<DEDENT>"),
+                new Logger.Log(20,20, 0,0, "<DEDENT>"),
+                new Logger.Log(8,22,14, 0,".")
+
+        );
+        System.out.println(tokens);
+
+        //Assertions.assertEquals(expected, result);
+
     }
 }

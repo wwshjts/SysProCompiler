@@ -49,7 +49,6 @@ public class SpcLexer implements Lexer {
 
         }
 
-        System.out.println(ctx.input);
 
         return new ResultOfLexing(tokens, ctx.logger, ctx.input);
     }
@@ -170,7 +169,7 @@ public class SpcLexer implements Lexer {
 
             // TODO: ugly
             Optional<String> next = ctx.seek();
-            if (next.isPresent() && (UnicodeUtils.isSpace(next.get()) || UnicodeUtils.isNewLine(next.get()))) {
+            if (next.isPresent() && (UnicodeUtils.isSpace(next.get()) || UnicodeUtils.isNewLine(next.get()) || (next.get()).equals("#"))) {
                 ctx.next();
                 curr = ctx.get();
             } else {
@@ -195,18 +194,22 @@ public class SpcLexer implements Lexer {
             ctx.next();
             if (UnicodeUtils.isNewLine(ctx.get())) {
                 last_new_line = ctx.index;
+                indentation_length = 0;
             } else if ((ctx.get()).equals("#")) {
 
                 // handle this situation
                 // \n____\n______\n\n\n\n\n____# comment\n____someCode
 
+                // code\n______#*comment*\n*code*\n__
+
                 scanComment(ctx);
             } else {
-                // TODO: think about correctness
                 indentation_length += UnicodeUtils.getNumberOfSpaces(ctx.get());
             }
             next = ctx.seek();
         }
+
+        // *code*\n\t\t\t\n*code*
 
         // situation like that *some_code*\n____
         // or *some_code*\n*code*
@@ -264,7 +267,7 @@ public class SpcLexer implements Lexer {
         ____def foo():
         _____smth_wrong
          */
-        if ((indentation_length % ctx.getIndentationLength() != 0)) {
+        if ((indentation_length % ctx.getIndentationLength() != 0) || (indentation_length == ctx.getIndentationLength())) {
             return List.of();
         }
 
@@ -288,7 +291,7 @@ public class SpcLexer implements Lexer {
         Optional<String> ch_opt = ctx.seek();
 
         // read all symbols in the comment string
-        while (ch_opt.isPresent() && (!(ch_opt.get()).equals("\n")) && (!(ch_opt.get()).equals("\r"))) {
+        while (ch_opt.isPresent() && (!UnicodeUtils.isNewLine(ch_opt.get()))) {
             ctx.next();
             ch_opt = ctx.seek();
         }
