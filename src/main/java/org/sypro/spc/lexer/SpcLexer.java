@@ -31,8 +31,9 @@ public class SpcLexer implements Lexer {
         LinkedList<Token> tokens = new LinkedList<>();
         Context ctx = new Context(s);
 
-        while (ctx.hasNext()) {
+        while (ctx.has()) {
             tokens.addAll(scanToken(ctx));
+            ctx.next();
         }
 
         return tokens;
@@ -42,7 +43,7 @@ public class SpcLexer implements Lexer {
     private static LinkedList<Token> scanToken(Context ctx) {
         String ch = ctx.get();
         int codePoint = ctx.getCodePoint();
-        GeneralCategory category = GeneralCategory.getCategory(codePoint);
+        //GeneralCategory category = GeneralCategory.getCategory(codePoint);
 
         LinkedList<Token> res = new LinkedList<>();
 
@@ -61,31 +62,34 @@ public class SpcLexer implements Lexer {
         // scan token after trailing trivia
         ctx.next();
         ch = ctx.get();
-        int trailing_trivia_len = ctx.getIndex() - end_of_trivia_pos;
+        int leading_trivia_len = end_of_trivia_pos - start_pos + 1;
+
+        System.out.println("Leading trivia");
+        System.out.println(leading_trivia_len);
 
         Token tkn = switch (ch) {
-            case "." -> new SymbolToken(start_pos, ctx.getIndex(), trailing_trivia_len, 0, Symbol.DOT);
-            case ":" -> new SymbolToken(start_pos, ctx.getIndex(), trailing_trivia_len, 0, Symbol.COLON);
-            case "," -> new SymbolToken(start_pos, ctx.getIndex(), trailing_trivia_len, 0, Symbol.COMMA);
-            case "+" -> new SymbolToken(start_pos, ctx.getIndex(), trailing_trivia_len, 0, Symbol.PLUS);
-            case "-" -> new SymbolToken(start_pos, ctx.getIndex(), trailing_trivia_len, 0, Symbol.MINUS);
-            case "*" -> new SymbolToken(start_pos, ctx.getIndex(), trailing_trivia_len, 0, Symbol.ASTERISK);
-            case "/" -> new SymbolToken(start_pos, ctx.getIndex(), trailing_trivia_len, 0, Symbol.SLASH);
-            case "%" -> new SymbolToken(start_pos, ctx.getIndex(), trailing_trivia_len, 0, Symbol.PERCENT);
+            case "." -> new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, Symbol.DOT);
+            case ":" -> new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, Symbol.COLON);
+            case "," -> new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, Symbol.COMMA);
+            case "+" -> new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, Symbol.PLUS);
+            case "-" -> new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, Symbol.MINUS);
+            case "*" -> new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, Symbol.ASTERISK);
+            case "/" -> new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, Symbol.SLASH);
+            case "%" -> new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, Symbol.PERCENT);
             case "!" -> {
                 Symbol s = scanNextSymbol(ctx, "=") ? Symbol.EXCLAMATION_EQUALS : Symbol.EXCLAMATION;
-                yield new SymbolToken(start_pos, ctx.getIndex(), trailing_trivia_len, 0, s);
+                yield new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, s);
             }
-            case "~" -> new SymbolToken(start_pos, ctx.getIndex(), trailing_trivia_len, 0, Symbol.TILDE);
+            case "~" -> new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, Symbol.TILDE);
             case "&" -> {
                 Symbol s = scanNextSymbol(ctx, "&") ? Symbol.AMPERSAND_AMPERSAND : Symbol.AMPERSAND;
-                yield new SymbolToken(start_pos, ctx.getIndex(), trailing_trivia_len, 0, s);
+                yield new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, s);
             }
             case "|" -> {
                 Symbol s = scanNextSymbol(ctx, "|") ? Symbol.BAR_BAR : Symbol.BAR;
-                yield new SymbolToken(start_pos, ctx.getIndex(), trailing_trivia_len, 0, s);
+                yield new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, s);
             }
-            case "^" -> new SymbolToken(start_pos, ctx.getIndex(), trailing_trivia_len, 0, Symbol.CARET);
+            case "^" -> new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, Symbol.CARET);
             case "<" -> {
                 Symbol s;
                 if (scanNextSymbol(ctx, "=")) {
@@ -97,7 +101,7 @@ public class SpcLexer implements Lexer {
                 } else {
                    s = Symbol.LESS_THAN;
                 }
-                yield new SymbolToken(start_pos, ctx.getIndex(), trailing_trivia_len, 0, s);
+                yield new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, s);
             }
             case ">" -> {
                 Symbol s;
@@ -108,17 +112,17 @@ public class SpcLexer implements Lexer {
                 } else {
                     s = Symbol.GREATER_THAN;
                 }
-                yield new SymbolToken(start_pos, ctx.getIndex(), trailing_trivia_len, 0, s);
+                yield new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, s);
             }
-            case "[" -> new SymbolToken(start_pos, ctx.getIndex(), trailing_trivia_len, 0, Symbol.OPEN_BRACKET);
-            case "]" -> new SymbolToken(start_pos, ctx.getIndex(), trailing_trivia_len, 0, Symbol.CLOSE_BRACKET);
-            case "(" -> new SymbolToken(start_pos, ctx.getIndex(), trailing_trivia_len, 0, Symbol.OPEN_PAREN);
-            case ")" -> new SymbolToken(start_pos, ctx.getIndex(), trailing_trivia_len, 0, Symbol.CLOSE_PAREN);
+            case "[" -> new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, Symbol.OPEN_BRACKET);
+            case "]" -> new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, Symbol.CLOSE_BRACKET);
+            case "(" -> new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, Symbol.OPEN_PAREN);
+            case ")" -> new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, Symbol.CLOSE_PAREN);
             case "=" -> {
                 Symbol s = scanNextSymbol(ctx, "&") ? Symbol.EQUALS_EQUALS : Symbol.EQUALS;
-                yield new SymbolToken(start_pos, ctx.getIndex(), trailing_trivia_len, 0, s);
+                yield new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, s);
             }
-            case "?" -> new SymbolToken(start_pos, ctx.getIndex(), trailing_trivia_len, 0, Symbol.QUESTION);
+            case "?" -> new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, Symbol.QUESTION);
 
             // scan integer
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" -> scanInteger(ctx);
@@ -126,23 +130,34 @@ public class SpcLexer implements Lexer {
             default -> new BadToken(0,0,0,0);
         };
 
+        if (!(tkn instanceof BadToken)) {
+            res.add(tkn);
+        }
+
+        System.out.println(res);
+
         return res;
     }
 
     private static Optional<Token> scanTrivia(Context ctx) {
-        Optional<String> next = ctx.seek();
-        while (next.isPresent() && (UnicodeUtils.isSpace(next.get()) || UnicodeUtils.isNewLine(next.get()) || (next.get()).equals("#"))) {
-            ctx.next();
-            String ch = ctx.get();
+        String curr = ctx.get();                    // it is guaranteed that curr exists
 
-            // TODO: a little bit ugly maybe I can better?
-            if (ch.equals("#")) {
+        while (UnicodeUtils.isNewLine(curr) || UnicodeUtils.isSpace(curr) || curr.equals("#")) {
+
+            if (curr.equals("#")) {
                 scanComment(ctx);
-            } else if (UnicodeUtils.isNewLine(ch)) {
+            } else if (UnicodeUtils.isNewLine(curr)) {
                 return scanIndent(ctx);
             }
 
-            next = ctx.seek();
+            // TODO: ugly
+            if (ctx.hasNext()) {
+                ctx.next();
+                curr = ctx.get();
+            } else {
+                break;
+            }
+
         }
 
         return Optional.empty();
@@ -161,8 +176,10 @@ public class SpcLexer implements Lexer {
             if (UnicodeUtils.isNewLine(ctx.get())) {
                 last_new_line = ctx.index;
             } else if ((ctx.get()).equals("#")) {
+
                 // handle this situation
                 // \n____\n______\n\n\n\n\n____# comment\n____someCode
+
                 scanComment(ctx);
             } else {
                 // TODO: think about correctness
@@ -173,7 +190,13 @@ public class SpcLexer implements Lexer {
 
         // situation like that \n____\n______\n\n\n\n\n
         if (next.isEmpty()) {
+            // if there was indentation level 0, we shouldn't produce [<DEDENT>]
+            if (ctx.getIndentationLevel() == 0) {
+               return Optional.empty();
+            }
+
             ctx.dropIndent();
+            System.out.println("Indentation attached to " + ctx.index);
             return Optional.of(new IndentationToken(ctx.index, ctx.index, 0, 0, -1));
         }
 
@@ -194,6 +217,7 @@ public class SpcLexer implements Lexer {
         if (ctx.getIndentationLevel() == 0) {
             ctx.increaseIndentationLevel();
             ctx.setIndentationLength(indentation_length);
+            System.out.println("Indentation attached to " + last_new_line);
             return Optional.of(new IndentationToken(last_new_line, last_new_line, 0, 0, 1));
         }
 
@@ -209,6 +233,7 @@ public class SpcLexer implements Lexer {
         if (indentation_length == 0) {
             ctx.dropIndent();
             if (ctx.getIndentationLevel() > 0) {
+                System.out.println("Indentation attached to " + last_new_line);
                 return Optional.of(new IndentationToken(last_new_line, last_new_line, 0, 0, -1));
             } else {
                 return Optional.empty();
@@ -274,7 +299,7 @@ public class SpcLexer implements Lexer {
         }
 
         String get() {
-            assert hasNext();
+            assert has();
             int i = input.offsetByCodePoints(0,  index);
             return Character.toString(input.codePointAt(i));
         }
@@ -295,7 +320,7 @@ public class SpcLexer implements Lexer {
         }
 
         Optional<String> seek() {
-            if (index + 1 < length) {
+            if (hasNext()) {
                 int i = input.offsetByCodePoints(0,  index + 1);
                 return Optional.of(Character.toString(input.codePointAt(i)));
             } else {
@@ -307,7 +332,11 @@ public class SpcLexer implements Lexer {
             indentation_level = 0;
         }
 
-        boolean hasNext() {
+        public boolean hasNext() {
+            return index + 1 < length;
+        }
+
+        public boolean has() {
             return index < length;
         }
 
