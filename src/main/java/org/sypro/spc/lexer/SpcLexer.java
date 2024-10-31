@@ -49,7 +49,9 @@ public class SpcLexer implements Lexer {
 
         }
 
-        return new ResultOfLexing(tokens, ctx.logger);
+        System.out.println(ctx.input);
+
+        return new ResultOfLexing(tokens, ctx.logger, ctx.input);
     }
 
     @Override
@@ -144,7 +146,7 @@ public class SpcLexer implements Lexer {
             // scan integer
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" -> scanInteger(start_pos, leading_trivia_len, ctx);
 
-            default -> new BadToken(0,0,0,0);
+            default -> scanIdentifier(start_pos, leading_trivia_len, ctx);
         };
 
         if (!(tkn instanceof BadToken)) {
@@ -279,6 +281,7 @@ public class SpcLexer implements Lexer {
         return indent;
     }
 
+
     // function that scan comment doesn't return token. It only modifies context.
     // it stops scanning when meets '\n' or '\r'
     private static void scanComment(Context ctx) {
@@ -332,6 +335,49 @@ public class SpcLexer implements Lexer {
 
         return new IntegerLiteralToken(start, ctx.getIndex(), leadingTriviaLength, 0,
                 type, hasSuffix, Integer.parseInt(sb.toString()));
+    }
+
+    // scan identifier or boolean literal
+    private static Token scanIdentifier(int start, int leadingTriviaLength, Context ctx) {
+        int cp = ctx.getCodePoint();
+        String ch = ctx.get();
+        StringBuilder sb = new StringBuilder(); sb.append(ch);
+        GeneralCategory generalCategory = GeneralCategory.of(cp);
+
+
+        if (!generalCategory.isLetter() && !generalCategory.equals(GeneralCategory.Nl) && !ch.equals("_")) {
+            return new BadToken(start, ctx.index, leadingTriviaLength, 0);
+        }
+
+        Optional<String> next = ctx.seek();
+        Optional<Integer> next_cp = ctx.seekCodePoint();
+
+        while (next_cp.isPresent() && (!GeneralCategory.of(next_cp.get()).equals(GeneralCategory.BAD))) {
+            ctx.next();
+            next_cp = ctx.seekCodePoint();
+            sb.append(ctx.get());
+        }
+
+        String value = sb.toString();
+
+        return switch (value) {
+            case "true" -> new BooleanLiteralToken(start, ctx.getIndex(), leadingTriviaLength, 0, true);
+            case "false" -> new BooleanLiteralToken(start, ctx.getIndex(), leadingTriviaLength, 0, false);
+            // TODO: merge this???
+            case "class" -> {
+                Keyword keyword = ctx.getIndentationLevel() == 0 ? Keyword.CLASS : null;
+                yield  new IdentifierToken(start, ctx.getIndex(), leadingTriviaLength, 0, value, keyword);
+            }
+            case "object" -> {
+                Keyword keyword = ctx.getIndentationLevel() == 0 ? Keyword.OBJECT : null;
+                yield  new IdentifierToken(start, ctx.getIndex(), leadingTriviaLength, 0, value, keyword);
+            }
+            case "interface" -> {
+                Keyword keyword = ctx.getIndentationLevel() == 0 ? Keyword.INTERFACE : null;
+                yield  new IdentifierToken(start, ctx.getIndex(), leadingTriviaLength, 0, value, keyword);
+            }
+            default -> new IdentifierToken(start, ctx.getIndex(), leadingTriviaLength, 0, value, null);
+        };
     }
 
     // modify context if suffix is matched, otherwise it doesn't modify context
@@ -394,9 +440,13 @@ public class SpcLexer implements Lexer {
             return input.codePointAt(i);
         }
 
-        int seekCodePoint() {
-            int i = input.offsetByCodePoints(0,  index + 1);
-            return input.codePointAt(i);
+        Optional<Integer> seekCodePoint() {
+            if (hasNext()) {
+                int i = input.offsetByCodePoints(0, index + 1);
+                return Optional.of(input.codePointAt(i));
+            } else {
+                return Optional.empty();
+            }
         }
 
         // modifies scanning position
@@ -464,8 +514,9 @@ public class SpcLexer implements Lexer {
     public static class ResultOfLexing {
         public List<Token> lex_result;
         public Logger logger;
+        String input;
 
-        ResultOfLexing(List<Token> lex_result, Logger logger) {
+        ResultOfLexing(List<Token> lex_result, Logger logger, String input) {
             this.lex_result = lex_result;
             this.logger = logger;
         }

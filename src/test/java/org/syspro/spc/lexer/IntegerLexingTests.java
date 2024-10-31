@@ -84,19 +84,16 @@ public class IntegerLexingTests {
         Assertions.assertEquals(expected, result);
     }
 
-    // TODO: make
     @Test
-    @DisplayName("Bad suffix in the end of file")
+    @DisplayName("Bad suffix")
     public void badSuffixAtTheEOFTest() {
-        String input = "42u6";
+        String input = "42u6 foo";
         SpcLexer lex = new SpcLexer();
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
         List<Logger.Log> expected = List.of(
-                new Logger.Log(0, 4, 0, 0, "42u64")
+                new Logger.Log(0, 1, 0, 0, "42"),
+                new Logger.Log(2, 3, 0,0, "u6"),
+                new Logger.Log(4, 7, 1,0, "foo")
         );
     }
-
-
-
-
 }

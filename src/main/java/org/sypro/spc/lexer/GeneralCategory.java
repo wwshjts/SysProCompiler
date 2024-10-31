@@ -8,11 +8,19 @@ public enum GeneralCategory {
     Nl, Nd,
 
     // Punctuation
-    Pc, Po, Pd, Pe, Ps, Pf, Pi,
-    // Other stuff
-    Mn, Mc, Cf;
+    Pc,
 
-    public static GeneralCategory getCategory(int codePoint) {
+    // Other stuff
+    Mn, Mc, Cf,
+
+    // Error category
+    BAD;
+
+    public boolean isLetter() {
+        return equals(Lu) || equals(Lt) || equals(Ll) || equals(Lm) || equals(Lo);
+    }
+
+    public static GeneralCategory of(int codePoint) {
         return switch (Character.getType(codePoint)) {
             // Letters
             case Character.UPPERCASE_LETTER -> Lu;
@@ -27,20 +35,13 @@ public enum GeneralCategory {
 
             // Punctuation
             case Character.CONNECTOR_PUNCTUATION -> Pc;
-            case Character.OTHER_PUNCTUATION -> Po;
-            case Character.DASH_PUNCTUATION -> Pd;
-            case Character.END_PUNCTUATION -> Pe;
-            case Character.START_PUNCTUATION -> Ps;
-            case Character.FINAL_QUOTE_PUNCTUATION -> Pf;
-            case Character.INITIAL_QUOTE_PUNCTUATION -> Pi;
 
             // Other
             case Character.NON_SPACING_MARK -> Mn;
             case Character.COMBINING_SPACING_MARK -> Mc;
             case Character.FORMAT -> Cf;
 
-            // TODO
-            default -> throw new IllegalArgumentException("From: Lexer.\n Unexpected general category on codepoint" + codePoint);
+            default -> BAD;
         };
     }
 }
