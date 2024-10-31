@@ -1,4 +1,4 @@
-package org.sypro.spc.lexer;
+package utils;
 
 
 import java.util.Optional;
@@ -36,7 +36,7 @@ public class UnicodeUtils {
     public static int getNumberOfSpaces(String ch) {
         return switch (ch) {
             case " " -> 1;
-            case "\t"  -> 2; // there is no difference \t equals two or four spaces
+            case "\t" -> 2; // there is no difference \t equals two or four spaces
             default -> throw new IllegalArgumentException("Can't get number of spaces in non space character: " + ch + ch.codePointAt(0));
         };
     }

@@ -2,6 +2,7 @@ package org.sypro.spc.lexer;
 
 import syspro.tm.lexer.*;
 import utils.Logger;
+import utils.UnicodeUtils;
 
 import java.util.*;
 
