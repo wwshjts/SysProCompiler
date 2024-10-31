@@ -37,5 +37,12 @@ public class Logger {
                     "String repr: " + strRepresentation +"\n";
         }
 
+        public Log withEnd(int end) {
+            return new Log(start, end, leadingTriviaLength, trailingTriviaLength, strRepresentation);
+        }
+
+        public Log withTrailingTriviaLength(int trailingTriviaLength) {
+            return new Log(start, end, leadingTriviaLength, trailingTriviaLength, strRepresentation);
+        }
     }
 }

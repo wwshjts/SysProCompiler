@@ -23,6 +23,26 @@ public class SpcLexer implements Lexer {
             ctx.next();
         }
 
+        List<Logger.Log> logs = ctx.logger.toList();
+
+        assert logs.size() == tokens.size();
+
+        // if there is trailing trivia on the last token
+        if (!logs.isEmpty() && (logs.getLast().strRepresentation().equals("<DEDENT>") ||
+                (logs.getLast()).end() < ctx.length)) {
+            int last_tkn_index = logs.getLast().strRepresentation().equals("<DEDENT>") ? logs.size() - 2 : logs.size() - 1;
+
+            Logger.Log  last_log = logs.get(last_tkn_index);
+            Token last_tkn = tokens.get(last_tkn_index);
+
+            tokens.set(last_tkn_index, last_tkn.withEnd(ctx.length - 1 ).withTrailingTriviaLength(
+                    ctx.length - last_log.end() - 1));
+
+            logs.set(last_tkn_index, last_log.withEnd(ctx.length - 1).withTrailingTriviaLength(
+                    ctx.length - last_log.end() - 1));
+
+        }
+
         return new ResultOfLexing(tokens, ctx.logger);
     }
 

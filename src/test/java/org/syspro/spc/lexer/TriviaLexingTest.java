@@ -25,7 +25,7 @@ public class TriviaLexingTest {
 
     @Test
     @DisplayName("Simple Indent")
-    public void SimpleIndent() {
+    public void simpleIndent() {
         String input = "\n  .";
         SpcLexer lex = new SpcLexer();
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
@@ -40,7 +40,7 @@ public class TriviaLexingTest {
 
     @Test
     @DisplayName("Simple Indent with CRLF")
-    public void SimpleIndentCRLF() {
+    public void simpleIndentCRLF() {
         String input = "\r\n  .";
         SpcLexer lex = new SpcLexer();
         List<String> result = (lex.lex(input)).stream().map(Token::toString).toList();
@@ -54,7 +54,7 @@ public class TriviaLexingTest {
 
     @Test
     @DisplayName("Simple Indent Dedent")
-    public void SimpleIndentDedent() {
+    public void simpleIndentDedent() {
         String input = "\n  .\n";
         SpcLexer lex = new SpcLexer();
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
@@ -70,7 +70,7 @@ public class TriviaLexingTest {
 
     @Test
     @DisplayName("Simple Indent Dedent with CRLF")
-    public void SimpleIndentDedentCRLF() {
+    public void simpleIndentDedentCRLF() {
         String input = "\r\n  .\r\n";
         SpcLexer lex = new SpcLexer();
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
@@ -79,6 +79,37 @@ public class TriviaLexingTest {
                 new Logger.Log(1, 1, 0, 0, "<INDENT>"),
                 new Logger.Log(0, input.codePointCount(0, input.length()) - 1, 4, 2, "."),
                 new Logger.Log(input.length() - 1, input.length() - 1, 0, 0, "<DEDENT>")
+        );
+
+        Assertions.assertEquals(expected, result);
+    }
+
+    @Test
+    @DisplayName("Trailing trivia")
+    public void trailingTrivia() {
+        String input = "\r\n  .\n    \r\n";
+        SpcLexer lex = new SpcLexer();
+        List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
+
+        List<Logger.Log> expected = Arrays.asList(
+                new Logger.Log(1, 1, 0, 0, "<INDENT>"),
+                new Logger.Log(0, input.codePointCount(0, input.length()) - 1, 4, 7, "."),
+                new Logger.Log(input.length() - 1, input.length() - 1, 0, 0, "<DEDENT>")
+        );
+
+        Assertions.assertEquals(expected, result);
+    }
+
+    @Test
+    @DisplayName("Simple trailing trivia")
+    public void simpleTrailingTrivia() {
+        String input = "\r\n  .    ";
+        SpcLexer lex = new SpcLexer();
+        List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
+
+        List<Logger.Log> expected = Arrays.asList(
+                new Logger.Log(1, 1, 0, 0, "<INDENT>"),
+                new Logger.Log(0, input.codePointCount(0, input.length()) - 1, 4, 4, ".")
         );
 
         Assertions.assertEquals(expected, result);
