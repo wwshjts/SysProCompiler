@@ -30,7 +30,12 @@ public class SpcLexer implements Lexer {
         // if there is trailing trivia on the last token
         if (!logs.isEmpty() && (logs.getLast().strRepresentation().equals("<DEDENT>") ||
                 (logs.getLast()).end() < ctx.length)) {
-            int last_tkn_index = logs.getLast().strRepresentation().equals("<DEDENT>") ? logs.size() - 2 : logs.size() - 1;
+            //int last_tkn_index = logs.getLast().strRepresentation().equals("<DEDENT>") ? logs.size() - 2 : logs.size() - 1;
+
+            int last_tkn_index = logs.size() - 1;
+            while (logs.get(last_tkn_index).strRepresentation().equals("<DEDENT>")) {
+                last_tkn_index--;
+            }
 
             Logger.Log  last_log = logs.get(last_tkn_index);
             Token last_tkn = tokens.get(last_tkn_index);
@@ -65,7 +70,7 @@ public class SpcLexer implements Lexer {
 
         // Scanning trivia produces IndentToken or don't produce any token
         if (UnicodeUtils.isNewLine(ch) || UnicodeUtils.isSpace(ch) || ch.equals("#")) {
-            scanTrivia(ctx).ifPresent(res::addLast);
+            res.addAll(scanTrivia(ctx));
             ctx.next();
             end_of_trivia_pos = ctx.getIndex();
         }
@@ -149,7 +154,7 @@ public class SpcLexer implements Lexer {
         return res;
     }
 
-    private static Optional<Token> scanTrivia(Context ctx) {
+    private static List<Token> scanTrivia(Context ctx) {
         String curr = ctx.get();                    // it is guaranteed that curr exists
 
         while (UnicodeUtils.isNewLine(curr) || UnicodeUtils.isSpace(curr) || curr.equals("#")) {
@@ -171,10 +176,10 @@ public class SpcLexer implements Lexer {
 
         }
 
-        return Optional.empty();
+        return new ArrayList<>();
     }
 
-    private static Optional<Token> scanIndent(Context ctx) {
+    private static List<Token> scanIndent(Context ctx) {
         String curr = ctx.get();
         Optional<String> next = ctx.seek();
 
@@ -200,25 +205,44 @@ public class SpcLexer implements Lexer {
             next = ctx.seek();
         }
 
-        // situation like that \n____\n______\n\n\n\n\n
-        if (next.isEmpty()) {
+        // situation like that *some_code*\n____
+        // or *some_code*\n*code*
+        if (next.isEmpty() || indentation_length == 0) {
             // if there was indentation level 0, we shouldn't produce [<DEDENT>]
             if (ctx.getIndentationLevel() == 0) {
-               return Optional.empty();
+               return List.of();
             }
 
-            ctx.dropIndent();
-            ctx.logger.logToken(ctx.index, ctx.index, 0, 0, "<DEDENT>");
-            return Optional.of(new IndentationToken(ctx.index, ctx.index, 0, 0, -1));
+            int levels_to_drop = ctx.dropIndent();
+            List<Token> drop = new ArrayList<>(levels_to_drop);
+            for (int i = 0; i < levels_to_drop; i++) {
+                ctx.logger.logToken(ctx.index, ctx.index, 0, 0, "<DEDENT>");
+                drop.add(new IndentationToken(ctx.index, ctx.index, 0, 0, -1));
+            }
+
+            return drop;
         }
 
-        // situation like that \n____\n______\n\n\n\n\n____some code
-
+        /*
+        if (indentation_length == 0) {
+            if (ctx.getIndentationLevel() > 0) {
+                int levels_to_drop = ctx.dropIndent();
+                List<Token> drop = new ArrayList<>();
+                for (int i = 0; i < levels_to_drop; i++) {
+                    ctx.logger.logToken(last_new_line, last_new_line, 0, 0, "<DEDENT>");
+                    drop.add(new IndentationToken(last_new_line, last_new_line, 0, 0, -1));
+                }
+                return drop;
+            } else {
+                return List.of();
+            }
+        }
+         */
 
         // \n____\n______\n\n\n\n\n___some code
         // in other words there is incorrect level of indentation
         if (indentation_length % 2 != 0) {
-            return Optional.empty();
+            return List.of();
         }
 
         /* situation like that
@@ -229,32 +253,29 @@ public class SpcLexer implements Lexer {
             ctx.increaseIndentationLevel();
             ctx.setIndentationLength(indentation_length);
             ctx.logger.logToken(last_new_line, last_new_line, 0, 0, "<INDENT>");
-            return Optional.of(new IndentationToken(last_new_line, last_new_line, 0, 0, 1));
+            return List.of(new IndentationToken(last_new_line, last_new_line, 0, 0, 1));
         }
 
         /* incorrect change if indentation
         class Foo:
         ____def foo():
-        __smth_wrong
+        _____smth_wrong
          */
-        if (indentation_length % ctx.getIndentationLevel() != 0) {
-            return Optional.empty();
+        if ((indentation_length % ctx.getIndentationLength() != 0)) {
+            return List.of();
         }
 
-        if (indentation_length == 0) {
-            ctx.dropIndent();
-            if (ctx.getIndentationLevel() > 0) {
-                ctx.logger.logToken(last_new_line, last_new_line, 0, 0, "<DEDENT>");
-                return Optional.of(new IndentationToken(last_new_line, last_new_line, 0, 0, -1));
-            } else {
-                return Optional.empty();
-            }
-        }
-
-        ctx.setIndentationLevel(ctx.getIndentationLength());
+        int required_level = indentation_length / ctx.getIndentationLength();
+        List<Token> indent = new ArrayList<>(required_level);
         ctx.setIndentationLength(indentation_length);
-        ctx.logger.logToken(last_new_line, last_new_line, 0, 0, "<INDENT>");
-        return Optional.of(new IndentationToken(last_new_line, last_new_line, 0, 0, 1));
+
+        while (ctx.getIndentationLevel() != required_level) {
+            ctx.increaseIndentationLevel();
+            ctx.logger.logToken(last_new_line, last_new_line, 0, 0, "<INDENT>");
+            indent.add(new IndentationToken(last_new_line, last_new_line, 0, 0, 1));
+        }
+
+        return indent;
     }
 
     // function that scan comment doesn't return token. It only modifies context.
@@ -339,8 +360,11 @@ public class SpcLexer implements Lexer {
             }
         }
 
-        void dropIndent() {
+        int dropIndent() {
+            int res = indentation_level;
             indentation_level = 0;
+            indentation_length = 0;
+            return res;
         }
 
         public boolean hasNext() {
