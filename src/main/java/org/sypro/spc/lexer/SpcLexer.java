@@ -1,6 +1,7 @@
 package org.sypro.spc.lexer;
 
 import syspro.tm.lexer.*;
+import utils.Logger;
 
 import java.util.*;
 
@@ -12,22 +13,8 @@ import java.util.*;
  */
 
 public class SpcLexer implements Lexer {
-    private static final Set<String> spcSymbols;
-    static {
-        String[] symbols = {
-                ".", ":", ",",
-                "+", "-", "*", "/", "%", "!",
-                "~", "&", "|", "^",
-                "<", ">",
-                "[", "]", "(", ")",
-                "=", "?"
-        };
-        spcSymbols = new HashSet<>(Arrays.asList(symbols));
-    }
 
-
-    @Override
-    public List<Token> lex(String s) {
+    public ResultOfLexing spcLex(String s) {
         LinkedList<Token> tokens = new LinkedList<>();
         Context ctx = new Context(s);
 
@@ -36,8 +23,14 @@ public class SpcLexer implements Lexer {
             ctx.next();
         }
 
-        return tokens;
+        return new ResultOfLexing(tokens, ctx.logger);
     }
+
+    @Override
+    public List<Token> lex(String s) {
+        return spcLex(s).lex_result;
+    }
+
 
     // return's list because there is inputs, that not produce tokens, or produce two tokens at once
     private static LinkedList<Token> scanToken(Context ctx) {
@@ -63,9 +56,6 @@ public class SpcLexer implements Lexer {
         ctx.next();
         ch = ctx.get();
         int leading_trivia_len = end_of_trivia_pos - start_pos + 1;
-
-        System.out.println("Leading trivia");
-        System.out.println(leading_trivia_len);
 
         Token tkn = switch (ch) {
             case "." -> new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, Symbol.DOT);
@@ -132,9 +122,8 @@ public class SpcLexer implements Lexer {
 
         if (!(tkn instanceof BadToken)) {
             res.add(tkn);
+            ctx.logger.logToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, tkn.toString());
         }
-
-        System.out.println(res);
 
         return res;
     }
@@ -196,7 +185,7 @@ public class SpcLexer implements Lexer {
             }
 
             ctx.dropIndent();
-            System.out.println("Indentation attached to " + ctx.index);
+            ctx.logger.logToken(ctx.index, ctx.index, 0, 0, "<DEDENT>");
             return Optional.of(new IndentationToken(ctx.index, ctx.index, 0, 0, -1));
         }
 
@@ -217,7 +206,7 @@ public class SpcLexer implements Lexer {
         if (ctx.getIndentationLevel() == 0) {
             ctx.increaseIndentationLevel();
             ctx.setIndentationLength(indentation_length);
-            System.out.println("Indentation attached to " + last_new_line);
+            ctx.logger.logToken(last_new_line, last_new_line, 0, 0, "<INDENT>");
             return Optional.of(new IndentationToken(last_new_line, last_new_line, 0, 0, 1));
         }
 
@@ -233,7 +222,7 @@ public class SpcLexer implements Lexer {
         if (indentation_length == 0) {
             ctx.dropIndent();
             if (ctx.getIndentationLevel() > 0) {
-                System.out.println("Indentation attached to " + last_new_line);
+                ctx.logger.logToken(last_new_line, last_new_line, 0, 0, "<DEDENT>");
                 return Optional.of(new IndentationToken(last_new_line, last_new_line, 0, 0, -1));
             } else {
                 return Optional.empty();
@@ -281,7 +270,6 @@ public class SpcLexer implements Lexer {
         // the string of code points of input
         private final String input;
 
-
         // number of read codePoints
         private int index = 0;
 
@@ -291,7 +279,7 @@ public class SpcLexer implements Lexer {
         private int line = 1; // TODO: add line counting
         private int indentation_level = 0;
         private int indentation_length = -1;
-
+        public final Logger logger = new Logger();
 
         Context (String input) {
             this.input = input;
@@ -366,5 +354,15 @@ public class SpcLexer implements Lexer {
             return index;
         }
 
+    }
+
+    public static class ResultOfLexing {
+        public List<Token> lex_result;
+        public Logger logger;
+
+        ResultOfLexing(List<Token> lex_result, Logger logger) {
+            this.lex_result = lex_result;
+            this.logger = logger;
+        }
     }
 }

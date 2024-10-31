@@ -5,6 +5,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.sypro.spc.lexer.SpcLexer;
 import syspro.tm.lexer.Token;
+import utils.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,9 +18,9 @@ public class TriviaLexingTest {
     public void indentationAndCommentaries() {
         String input = "\n  #*comment*";
         SpcLexer lex = new SpcLexer();
-        List<Token> result = (lex.lex(input));
-        List<Token> expected = new ArrayList<>();
-        Assertions.assertEquals( expected, result);
+        List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
+        List<Logger.Log> expected = new ArrayList<>();
+        Assertions.assertEquals(expected, result);
     }
 
     @Test
@@ -27,10 +28,11 @@ public class TriviaLexingTest {
     public void SimpleIndent() {
         String input = "\n  .";
         SpcLexer lex = new SpcLexer();
-        List<String> result = (lex.lex(input)).stream().map(Token::toString).toList();
+        List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
 
-        List<String> expected = Arrays.asList(
-                "<INDENT>", "."
+        List<Logger.Log> expected = Arrays.asList(
+                new Logger.Log(0, 0, 0, 0, "<INDENT>"),
+                new Logger.Log(0, 3, 3, 0, ".")
         );
 
         Assertions.assertEquals(expected, result);
@@ -55,10 +57,12 @@ public class TriviaLexingTest {
     public void SimpleIndentDedent() {
         String input = "\n  .\n";
         SpcLexer lex = new SpcLexer();
-        List<String> result = (lex.lex(input)).stream().map(Token::toString).toList();
+        List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
 
-        List<String> expected = Arrays.asList(
-                "<INDENT>", ".", "<DEDENT>"
+        List<Logger.Log> expected = Arrays.asList(
+                new Logger.Log(0, 0, 0, 0, "<INDENT>"),
+                new Logger.Log(0, 4, 3, 1, "."),
+                new Logger.Log(4, 4, 0, 0, "<DEDENT>")
         );
 
         Assertions.assertEquals(expected, result);
@@ -69,10 +73,12 @@ public class TriviaLexingTest {
     public void SimpleIndentDedentCRLF() {
         String input = "\r\n  .\r\n";
         SpcLexer lex = new SpcLexer();
-        List<String> result = (lex.lex(input)).stream().map(Token::toString).toList();
+        List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
 
-        List<String> expected = Arrays.asList(
-                "<INDENT>", ".", "<DEDENT>"
+        List<Logger.Log> expected = Arrays.asList(
+                new Logger.Log(1, 1, 0, 0, "<INDENT>"),
+                new Logger.Log(0, input.codePointCount(0, input.length()) - 1, 4, 2, "."),
+                new Logger.Log(input.length() - 1, input.length() - 1, 0, 0, "<DEDENT>")
         );
 
         Assertions.assertEquals(expected, result);
