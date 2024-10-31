@@ -141,7 +141,7 @@ public class SpcLexer implements Lexer {
             case "?" -> new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, Symbol.QUESTION);
 
             // scan integer
-            case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" -> scanInteger(ctx);
+            case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" -> scanInteger(start_pos, leading_trivia_len, ctx);
 
             default -> new BadToken(0,0,0,0);
         };
@@ -290,6 +290,7 @@ public class SpcLexer implements Lexer {
         }
     }
 
+    // TODO: refract this to matchNext
     private static boolean scanNextSymbol(Context ctx, String symbol) {
         Optional<String> next = ctx.seek();
         if (next.isPresent() && next.get().equals(symbol)) {
@@ -299,8 +300,59 @@ public class SpcLexer implements Lexer {
         return false;
     }
 
-    private static Token scanInteger(Context ctx) {
-        return new BadToken(1,1,1,1);
+    // TODO: think about REALLY large integers
+    private static Token scanInteger(int start, int leadingTriviaLength, Context ctx) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(ctx.get());
+        Optional<String> next = ctx.seek();
+
+        while (next.isPresent() && (UnicodeUtils.isDigit(next.get()))) {
+            sb.append(next.get());
+            ctx.next();
+            next = ctx.seek();
+        }
+
+        // scan suffix
+        BuiltInType type = BuiltInType.INT64;
+        boolean hasSuffix = false;
+        if (matchIntegerSuffix(ctx, "i32")) {
+            type = BuiltInType.INT32;
+            hasSuffix = true;
+        } else if (matchIntegerSuffix(ctx, "u32")) {
+            type = BuiltInType.UINT32;
+            hasSuffix = true;
+        } else if (matchIntegerSuffix(ctx, "i64")) {
+            type = BuiltInType.INT64;
+            hasSuffix = true;
+        } else if (matchIntegerSuffix(ctx, "u64")) {
+            type= BuiltInType.UINT64;
+            hasSuffix =  true;
+        }
+
+        return new IntegerLiteralToken(start, ctx.getIndex(), leadingTriviaLength, 0,
+                type, hasSuffix, Integer.parseInt(sb.toString()));
+    }
+
+    // modify context if suffix is matched, otherwise it doesn't modify context
+    // we can't have surrogate pair in suffix, so it is correct to compare just by symbols in suffix
+    private static boolean matchIntegerSuffix(Context ctx, String suffix) {
+        assert suffix.length() == 3;
+        int suffix_length = 3;
+
+        if (!ctx.has(suffix_length)) {
+            return false;
+        }
+
+        for (int i = 0; i < suffix_length; i++) {
+            ctx.next();
+            String ch = ctx.get();
+            if (!ch.equals(Character.toString(suffix.charAt(i)))) {
+                ctx.back(i + 1);
+                return false;
+            }
+        }
+
+        return true;
     }
 
 
@@ -375,17 +427,16 @@ public class SpcLexer implements Lexer {
             return index < length;
         }
 
+        public boolean has(int n) {
+           return index + n < length;
+        }
+
         public int getIndentationLevel() {
             return indentation_level;
         }
 
         public void increaseIndentationLevel() {
             this.indentation_level++;
-        }
-
-        public void setIndentationLevel(int n) {
-            assert n > 0;
-            indentation_level = n;
         }
 
         public int getIndentationLength() {
@@ -399,6 +450,12 @@ public class SpcLexer implements Lexer {
 
         public int getIndex() {
             return index;
+        }
+
+        // very dangerous
+        private void back(int steps) {
+            assert steps > 0 && index - steps > 0;
+            index -= steps;
         }
 
     }
