@@ -115,6 +115,63 @@ public class TriviaLexingTest {
         Assertions.assertEquals(expected, result);
     }
 
+
+    @Test
+    @DisplayName("Tabs and indentation")
+    public void tabsAndIndent() {
+        String input = "<<\n  .\n\t\t.";
+        SpcLexer lex = new SpcLexer();
+        List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
+
+        List<Logger.Log> expected = Arrays.asList(
+                new Logger.Log(0, 1, 0, 0, "<<"),
+                new Logger.Log(2, 2, 0, 0, "<INDENT>"),
+                new Logger.Log(2, 5, 3, 0, "."),
+                new Logger.Log(6, 6, 0, 0, "<INDENT>"),
+                new Logger.Log(6, input.codePointCount(0, input.length()) - 1, 3, 0, ".")
+        );
+
+        Assertions.assertEquals(expected, result);
+    }
+
+    @Test
+    @DisplayName("Incorrect level of indentation")
+    public void incorrectLevelOfIndent() {
+        // the trivia length after dot % 2 = 1, so the token indent doesn't yields
+        String input = "\r\n  .\n\t .";
+        SpcLexer lex = new SpcLexer();
+        List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
+
+        List<Logger.Log> expected = Arrays.asList(
+                new Logger.Log(1, 1, 0, 0, "<INDENT>"),
+                new Logger.Log(0, 4, 4, 0, "."),
+                new Logger.Log(5, 8, 3, 0, ".")
+        );
+
+        Assertions.assertEquals(expected, result);
+    }
+
+    @Test
+    @DisplayName("Correct level of indentation")
+    public void correctLevelOfIndent() {
+        // the trivia length after dot % 2 = 1, so the token indent doesn't yields
+        String input = "\r\n  .\n\t\t.";
+        SpcLexer lex = new SpcLexer();
+        List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
+
+        List<Logger.Log> expected = Arrays.asList(
+                new Logger.Log(1, 1, 0, 0, "<INDENT>"),
+                new Logger.Log(0, 4, 4, 0, "."),
+                new Logger.Log(5, 5, 0, 0, "<INDENT>"),
+                new Logger.Log(5, 8, 3, 0, ".")
+        );
+
+        Assertions.assertEquals(expected, result);
+    }
+
+
+
+
     @Test
     @DisplayName("Tricky indentation and commentaries")
     public void trickyIndentation() {
