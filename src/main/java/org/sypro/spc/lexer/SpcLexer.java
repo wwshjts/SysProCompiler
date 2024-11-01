@@ -18,6 +18,8 @@ public class SpcLexer implements Lexer {
     public ResultOfLexing spcLex(String s) {
         LinkedList<Token> tokens = new LinkedList<>();
         Context ctx = new Context(s);
+        System.out.println("Test:\n");
+        System.out.println(ctx.input);
 
         while (ctx.has()) {
             tokens.addAll(scanToken(ctx));
@@ -142,16 +144,16 @@ public class SpcLexer implements Lexer {
             }
             case "?" -> new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, Symbol.QUESTION);
 
+            case "'" -> scanRune(start_pos, leading_trivia_len, ctx);
+
             // scan integer
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" -> scanInteger(start_pos, leading_trivia_len, ctx);
 
             default -> scanIdentifier(start_pos, leading_trivia_len, ctx);
         };
 
-        if (!(tkn instanceof BadToken)) {
-            res.add(tkn);
-            ctx.logger.logToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, tkn.toString());
-        }
+        res.add(tkn);
+        ctx.logger.logToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, tkn.toString());
 
         return res;
     }
@@ -381,6 +383,123 @@ public class SpcLexer implements Lexer {
             }
             default -> new IdentifierToken(start, ctx.getIndex(), leadingTriviaLength, 0, value, null);
         };
+    }
+
+    private static Token scanRune(int start, int leadingTriviaLength, Context ctx) {
+        Optional<String> next =  ctx.seek();
+
+        if (next.isEmpty()) {
+            return new BadToken(start, ctx.index, leadingTriviaLength, 0);
+        }
+
+        int rune_value;
+        // scan escape
+        if (next.get().equals("\\")) {
+            ctx.next();
+
+            // TODO: ugly
+            Optional<Integer> value = evalShortEscape(ctx);
+            if (value.isEmpty()) {
+                value = evalUnicodeEscape(ctx);
+            }
+
+            if (value.isEmpty()) {
+                return new BadToken(start, ctx.index, 0, 0);
+            }
+
+            rune_value = value.get();
+        } else { // else rune looks like this 'S' where S is some Unicode character
+            ctx.next();
+            int cp = ctx.getCodePoint();
+            Optional<String> end_of_rune = ctx.seek();
+
+            if (end_of_rune.isEmpty() || !end_of_rune.get().equals("'")) {
+                return new BadToken(start, ctx.index, leadingTriviaLength, 0);
+            }
+
+            ctx.next();
+            rune_value = cp;
+        }
+
+        return new RuneLiteralToken(start, ctx.getIndex(), leadingTriviaLength, 0, rune_value);
+    }
+
+    private static Optional<Integer> evalShortEscape(Context ctx) {
+        if (!ctx.has(2)) {
+            return Optional.empty();
+        }
+
+        // lookup two symbols ahead
+        ctx.next();
+        String ch = ctx.get();
+        ctx.next();
+        String end_of_rune = ctx.get();
+
+        int cp = switch (ch) {
+            case "0" -> '\0';
+            case "a" -> 0x07;
+            case "b" -> '\b';
+            case "r" -> '\r';
+            case "n" -> '\n';
+            case "t" -> '\t';
+            case "v" ->  0x0b;
+            case "'" -> '\'';
+            case "\"" -> '\"';
+            case "\\" -> '\\';
+            default -> -1;
+        };
+
+        if ((cp < 0) || !end_of_rune.equals("'")) {
+            ctx.back(2);
+            return Optional.empty();
+        }
+
+        return Optional.of(cp);
+    }
+
+    private static Optional<Integer> evalUnicodeEscape(Context ctx) {
+        int look_ahead = 0;
+
+        if (ctx.has(2)) {
+            look_ahead = 2;
+        }
+
+        // math two first characters
+        ctx.next();
+        String u = ctx.get();
+        ctx.next();
+        String plus = ctx.get();
+
+        if (!u.equals("U") || !plus.equals("+")) {
+            ctx.back(2);
+            return Optional.empty();
+        }
+
+        Optional<String> next = ctx.seek();
+        StringBuilder sb = new StringBuilder();
+
+        while (next.isPresent() && !next.get().equals("'")) {
+            ctx.next();
+            next = ctx.seek();
+            look_ahead++;
+            sb.append(ctx.get());
+        }
+
+        if (next.isEmpty()) {
+            ctx.back(look_ahead);
+            return Optional.empty();
+        }
+
+        ctx.next();
+        look_ahead++;
+
+        try {
+            return Optional.of(Integer.parseInt(sb.toString(), 16));
+        } catch (NumberFormatException e) {
+            ctx.back(look_ahead);
+            return Optional.empty();
+        }
+
     }
 
     // modify context if suffix is matched, otherwise it doesn't modify context
