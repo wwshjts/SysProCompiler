@@ -18,7 +18,7 @@ public class SpcLexer implements Lexer {
     public ResultOfLexing spcLex(String s) {
         LinkedList<Token> tokens = new LinkedList<>();
         Context ctx = new Context(s);
-        System.out.println("Test:\n");
+        //System.out.println("Test:\n");
         System.out.println(ctx.input);
 
         while (ctx.has()) {
@@ -51,6 +51,18 @@ public class SpcLexer implements Lexer {
 
         }
 
+        if (ctx.getIndentationLevel() > 0) {
+            int levels_to_drop = ctx.dropIndent();
+            List<Token> drop = new ArrayList<>(levels_to_drop);
+            for (int i = 0; i < levels_to_drop; i++) {
+                ctx.logger.logToken(ctx.index, ctx.index, 0, 0, "<DEDENT>");
+                drop.add(new IndentationToken(ctx.index, ctx.index, 0, 0, -1));
+            }
+
+            tokens.addAll(drop);
+        }
+
+        System.out.println(tokens);
 
         return new ResultOfLexing(tokens, ctx.logger, ctx.input);
     }
