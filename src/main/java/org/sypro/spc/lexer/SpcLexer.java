@@ -78,6 +78,7 @@ public class SpcLexer implements Lexer {
     // return's list because there is inputs, that not produce tokens, or produce two tokens at once
     private static List<Token> scanToken(Context ctx) {
         String ch = ctx.get();
+
         int codePoint = ctx.getCodePoint();
         //GeneralCategory category = GeneralCategory.getCategory(codePoint);
 
@@ -211,6 +212,7 @@ public class SpcLexer implements Lexer {
 
     private static List<Token> scanTrivia(Context ctx) {
         String curr = ctx.get();                    // it is guaranteed that curr exists
+
         List<Token> res = new LinkedList<>();
 
         while (UnicodeUtils.isNewLine(curr) || UnicodeUtils.isSpace(curr) || curr.equals("#")) {
@@ -218,6 +220,7 @@ public class SpcLexer implements Lexer {
             if (curr.equals("#")) {
                 scanComment(ctx);
             } else if (UnicodeUtils.isNewLine(curr)) {
+
                 res.addAll(scanIndent(ctx));
             }
 
@@ -243,12 +246,17 @@ public class SpcLexer implements Lexer {
 
         int last_new_line = ctx.index;
         int indentation_length = 0;
+        int last_cr_index = 0;
 
         while (next.isPresent() && (UnicodeUtils.isSpace(next.get()) || (UnicodeUtils.isNewLine(next.get())))) {
+            if (ctx.get().equals("\r")) {
+                last_cr_index = ctx.getIndex();
+            }
             ctx.next();
             if (UnicodeUtils.isNewLine(ctx.get())) {
                 last_new_line = ctx.index;
                 indentation_length = 0;
+                System.out.println(last_cr_index + " " + last_new_line);
             } else {
                 indentation_length += UnicodeUtils.getNumberOfSpaces(ctx.get());
             }
@@ -257,6 +265,7 @@ public class SpcLexer implements Lexer {
 
         // *code*\n\t\t\t\n*code*
 
+        int begin = last_new_line - last_cr_index == 1 ? last_cr_index : last_new_line;
         // situation like that *some_code*\n____
         // or *some_code*\n*code*
         if (next.isEmpty() || indentation_length == 0) {
@@ -269,8 +278,8 @@ public class SpcLexer implements Lexer {
             assert levels_to_drop >= 0;
             List<Token> drop = new ArrayList<>(levels_to_drop);
             for (int i = 0; i < levels_to_drop; i++) {
-                ctx.logger.logToken(last_new_line, last_new_line, 0, 0, "<DEDENT>");
-                drop.add(new IndentationToken(last_new_line, last_new_line, 0, 0, -1));
+                ctx.logger.logToken(begin, last_new_line, 0, 0, "<DEDENT>");
+                drop.add(new IndentationToken(begin, last_new_line, 0, 0, -1));
             }
 
             return drop;
@@ -289,8 +298,8 @@ public class SpcLexer implements Lexer {
         if (ctx.getIndentationLevel() == 0) {
             ctx.increaseIndentationLevel();
             ctx.setIndentationLength(indentation_length);
-            ctx.logger.logToken(last_new_line, last_new_line, 0, 0, "<INDENT>");
-            return List.of(new IndentationToken(last_new_line, last_new_line, 0, 0, 1));
+            ctx.logger.logToken(begin, last_new_line, 0, 0, "<INDENT>");
+            return List.of(new IndentationToken(begin, last_new_line, 0, 0, 1));
         }
 
 
@@ -314,15 +323,15 @@ public class SpcLexer implements Lexer {
 
             while (ctx.getIndentationLevel() != required_level) {
                 ctx.increaseIndentationLevel();
-                ctx.logger.logToken(last_new_line, last_new_line, 0, 0, "<INDENT>");
-                indent.add(new IndentationToken(last_new_line, last_new_line, 0, 0, 1));
+                ctx.logger.logToken(begin, last_new_line, 0, 0, "<INDENT>");
+                indent.add(new IndentationToken(begin, last_new_line, 0, 0, 1));
             }
             return indent;
         } else {
             while (ctx.getIndentationLevel() != required_level) {
                 ctx.decreaseIndentationLevel();
-                ctx.logger.logToken(last_new_line, last_new_line, 0, 0, "<DEDENT>");
-                indent.add(new IndentationToken(last_new_line, last_new_line, 0, 0, -1));
+                ctx.logger.logToken(begin, last_new_line, 0, 0, "<DEDENT>");
+                indent.add(new IndentationToken(begin, last_new_line, 0, 0, -1));
             }
             return indent;
         }
