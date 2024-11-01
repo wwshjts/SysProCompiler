@@ -19,7 +19,11 @@ public class TriviaLexingTest {
         String input = "\n  #*comment*";
         SpcLexer lex = new SpcLexer();
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
-        List<Logger.Log> expected = new ArrayList<>();
+        List<Logger.Log> expected = List.of(
+                new Logger.Log(0, 0, 0,0, "<INDENT>"),
+                new Logger.Log(input.length(), input.length(), 0,0, "<DEDENT>")
+
+        );
         Assertions.assertEquals(expected, result);
     }
 
@@ -32,7 +36,8 @@ public class TriviaLexingTest {
 
         List<Logger.Log> expected = Arrays.asList(
                 new Logger.Log(0, 0, 0, 0, "<INDENT>"),
-                new Logger.Log(0, 3, 3, 0, ".")
+                new Logger.Log(0, 3, 3, 0, "."),
+                new Logger.Log(input.length(), input.length(), 0, 0, "<DEDENT>")
         );
 
         Assertions.assertEquals(expected, result);
@@ -46,7 +51,7 @@ public class TriviaLexingTest {
         List<String> result = (lex.lex(input)).stream().map(Token::toString).toList();
 
         List<String> expected = Arrays.asList(
-                "<INDENT>", "."
+                "<INDENT>", ".", "<DEDENT>"
         );
 
         Assertions.assertEquals(expected, result);
@@ -109,7 +114,8 @@ public class TriviaLexingTest {
 
         List<Logger.Log> expected = Arrays.asList(
                 new Logger.Log(1, 1, 0, 0, "<INDENT>"),
-                new Logger.Log(0, input.codePointCount(0, input.length()) - 1, 4, 4, ".")
+                new Logger.Log(0, input.length() - 1, 4, 4, "."),
+                new Logger.Log(input.length(), input.length(), 0, 0, "<DEDENT>")
         );
 
         Assertions.assertEquals(expected, result);
@@ -128,7 +134,10 @@ public class TriviaLexingTest {
                 new Logger.Log(2, 2, 0, 0, "<INDENT>"),
                 new Logger.Log(2, 5, 3, 0, "."),
                 new Logger.Log(6, 6, 0, 0, "<INDENT>"),
-                new Logger.Log(6, input.codePointCount(0, input.length()) - 1, 3, 0, ".")
+                new Logger.Log(6, input.codePointCount(0, input.length()) - 1, 3, 0, "."),
+                new Logger.Log(input.length(), input.length(), 0, 0, "<DEDENT>"),
+                new Logger.Log(input.length(), input.length(), 0, 0, "<DEDENT>")
+
         );
 
         Assertions.assertEquals(expected, result);
@@ -165,7 +174,8 @@ public class TriviaLexingTest {
         List<Logger.Log> expected = Arrays.asList(
                 new Logger.Log(1, 1, 0, 0, "<INDENT>"),
                 new Logger.Log(0, 4, 4, 0, "."),
-                new Logger.Log(5, 8, 3, 0, ".")
+                new Logger.Log(5, 8, 3, 0, "."),
+                new Logger.Log(input.length(), input.length(), 0, 0, "<DEDENT>")
         );
 
         Assertions.assertEquals(expected, result);
@@ -182,7 +192,9 @@ public class TriviaLexingTest {
                 new Logger.Log(1, 1, 0, 0, "<INDENT>"),
                 new Logger.Log(0, 4, 4, 0, "."),
                 new Logger.Log(5, 5, 0, 0, "<INDENT>"),
-                new Logger.Log(5, 8, 3, 0, ".")
+                new Logger.Log(5, 8, 3, 0, "."),
+                new Logger.Log(input.length(), input.length(), 0, 0, "<DEDENT>"),
+                new Logger.Log(input.length(), input.length(), 0, 0, "<DEDENT>")
         );
 
         Assertions.assertEquals(expected, result);
@@ -222,10 +234,6 @@ public class TriviaLexingTest {
         List<Token> tokens = (resultOfLexing).lex_result;
 
         Assertions.assertEquals(0, tokens.size());
-
-
-        //Assertions.assertEquals(expected, result);
-
     }
 
 
@@ -249,14 +257,13 @@ public class TriviaLexingTest {
                 new Logger.Log(1,3,2, 0,"."),
                 new Logger.Log(4,4, 0,0, "<INDENT>"),
                 new Logger.Log(4,7,3, 0,"."),
-                new Logger.Log(20,20, 0,0, "<DEDENT>"),
-                new Logger.Log(20,20, 0,0, "<DEDENT>"),
-                new Logger.Log(8,22,14, 0,".")
+                new Logger.Log(12,12, 0,0, "<DEDENT>"),
+                new Logger.Log(12,12, 0,0, "<DEDENT>"),
+                new Logger.Log(8,13,5, 0,".")
 
         );
-        System.out.println(tokens);
 
-        //Assertions.assertEquals(expected, result);
+        Assertions.assertEquals(expected, result);
 
     }
 }

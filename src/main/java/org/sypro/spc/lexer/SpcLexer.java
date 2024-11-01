@@ -19,7 +19,7 @@ public class SpcLexer implements Lexer {
         LinkedList<Token> tokens = new LinkedList<>();
         Context ctx = new Context(s);
         //System.out.println("Test:\n");
-        System.out.println(ctx.input);
+        //System.out.println(ctx.input);
 
         while (ctx.has()) {
             tokens.addAll(scanToken(ctx));
@@ -33,21 +33,26 @@ public class SpcLexer implements Lexer {
         // if there is trailing trivia on the last token
         if (!logs.isEmpty() && (logs.getLast().strRepresentation().equals("<DEDENT>") ||
                 (logs.getLast()).end() < ctx.length)) {
-            //int last_tkn_index = logs.getLast().strRepresentation().equals("<DEDENT>") ? logs.size() - 2 : logs.size() - 1;
 
             int last_tkn_index = logs.size() - 1;
-            while (logs.get(last_tkn_index).strRepresentation().equals("<DEDENT>")) {
+            while ( last_tkn_index >= 0 && (logs.get(last_tkn_index).strRepresentation().equals("<DEDENT>") ||
+                    logs.get(last_tkn_index).strRepresentation().equals("<INDENT>")) ) {
                 last_tkn_index--;
             }
 
-            Logger.Log  last_log = logs.get(last_tkn_index);
-            Token last_tkn = tokens.get(last_tkn_index);
 
-            tokens.set(last_tkn_index, last_tkn.withEnd(ctx.length - 1 ).withTrailingTriviaLength(
-                    ctx.length - last_log.end() - 1));
 
-            logs.set(last_tkn_index, last_log.withEnd(ctx.length - 1).withTrailingTriviaLength(
-                    ctx.length - last_log.end() - 1));
+            if (last_tkn_index >= 0) {
+
+                Logger.Log  last_log = logs.get(last_tkn_index);
+                Token last_tkn = tokens.get(last_tkn_index);
+
+                tokens.set(last_tkn_index, last_tkn.withEnd(ctx.length - 1 ).withTrailingTriviaLength(
+                        ctx.length - last_log.end() - 1));
+
+                logs.set(last_tkn_index, last_log.withEnd(ctx.length - 1).withTrailingTriviaLength(
+                        ctx.length - last_log.end() - 1));
+            }
 
         }
 
@@ -74,26 +79,61 @@ public class SpcLexer implements Lexer {
 
 
     // return's list because there is inputs, that not produce tokens, or produce two tokens at once
-    private static LinkedList<Token> scanToken(Context ctx) {
+    private static List<Token> scanToken(Context ctx) {
         String ch = ctx.get();
         int codePoint = ctx.getCodePoint();
         //GeneralCategory category = GeneralCategory.getCategory(codePoint);
 
-        LinkedList<Token> res = new LinkedList<>();
+        List<Token> res = new LinkedList<>();
 
         int start_pos = ctx.getIndex();
         int end_of_trivia_pos = ctx.getIndex();
 
-        // Scanning trivia produces IndentToken or don't produce any token
-        if (UnicodeUtils.isNewLine(ch) || UnicodeUtils.isSpace(ch) || ch.equals("#")) {
+        if (UnicodeUtils.isSpace(ch) || UnicodeUtils.isNewLine(ch) || ch.equals("#")) {
             res.addAll(scanTrivia(ctx));
-            ctx.next();
-            end_of_trivia_pos = ctx.getIndex();
+
+            if (ctx.hasNext()) {
+                ctx.next();
+                ch = ctx.get();
+            } else {
+                return res;
+            }
+
         }
 
-        if (!ctx.has()) {
-            return res;
+       /*
+        while (UnicodeUtils.isSpace(ch)) {
+            if (!ctx.hasNext()) {
+                return List.of();
+            }
+            ctx.next();
+            ch = ctx.get();
         }
+
+        if (ch.equals("#")) {
+            scanComment(ctx);
+            if (!ctx.hasNext()) {
+                return List.of();
+            }
+            ctx.next();
+            ch = ctx.get();
+        }
+
+
+        // Scanning trivia produces IndentToken or don't produce any token
+        if (UnicodeUtils.isNewLine(ch)) {
+            res.addAll(scanIndent(ctx));
+            Optional<String> next = ctx.seek();
+
+            if(next.isEmpty()) {
+                return res;
+            }
+
+            ctx.next();
+        }
+        */
+
+        end_of_trivia_pos = ctx.getIndex();
 
         // scan token after leading trivia
         ch = ctx.get();
@@ -172,13 +212,14 @@ public class SpcLexer implements Lexer {
 
     private static List<Token> scanTrivia(Context ctx) {
         String curr = ctx.get();                    // it is guaranteed that curr exists
+        List<Token> res = new LinkedList<>();
 
         while (UnicodeUtils.isNewLine(curr) || UnicodeUtils.isSpace(curr) || curr.equals("#")) {
 
             if (curr.equals("#")) {
                 scanComment(ctx);
             } else if (UnicodeUtils.isNewLine(curr)) {
-                return scanIndent(ctx);
+                res.addAll(scanIndent(ctx));
             }
 
             // TODO: ugly
@@ -192,7 +233,7 @@ public class SpcLexer implements Lexer {
 
         }
 
-        return new ArrayList<>();
+        return res;
     }
 
     private static List<Token> scanIndent(Context ctx) {
@@ -204,19 +245,11 @@ public class SpcLexer implements Lexer {
         int last_new_line = ctx.index;
         int indentation_length = 0;
 
-        while (next.isPresent() && (UnicodeUtils.isSpace(next.get()) || (UnicodeUtils.isNewLine(next.get())) || (next.get()).equals("#"))) {
+        while (next.isPresent() && (UnicodeUtils.isSpace(next.get()) || (UnicodeUtils.isNewLine(next.get())))) {
             ctx.next();
             if (UnicodeUtils.isNewLine(ctx.get())) {
                 last_new_line = ctx.index;
                 indentation_length = 0;
-            } else if ((ctx.get()).equals("#")) {
-
-                // handle this situation
-                // \n____\n______\n\n\n\n\n____# comment\n____someCode
-
-                // code\n______#*comment*\n*code*\n__
-
-                scanComment(ctx);
             } else {
                 indentation_length += UnicodeUtils.getNumberOfSpaces(ctx.get());
             }
@@ -234,30 +267,15 @@ public class SpcLexer implements Lexer {
             }
 
             int levels_to_drop = ctx.dropIndent();
+            assert levels_to_drop >= 0;
             List<Token> drop = new ArrayList<>(levels_to_drop);
             for (int i = 0; i < levels_to_drop; i++) {
-                ctx.logger.logToken(ctx.index, ctx.index, 0, 0, "<DEDENT>");
-                drop.add(new IndentationToken(ctx.index, ctx.index, 0, 0, -1));
+                ctx.logger.logToken(last_new_line, last_new_line, 0, 0, "<DEDENT>");
+                drop.add(new IndentationToken(last_new_line, last_new_line, 0, 0, -1));
             }
 
             return drop;
         }
-
-        /*
-        if (indentation_length == 0) {
-            if (ctx.getIndentationLevel() > 0) {
-                int levels_to_drop = ctx.dropIndent();
-                List<Token> drop = new ArrayList<>();
-                for (int i = 0; i < levels_to_drop; i++) {
-                    ctx.logger.logToken(last_new_line, last_new_line, 0, 0, "<DEDENT>");
-                    drop.add(new IndentationToken(last_new_line, last_new_line, 0, 0, -1));
-                }
-                return drop;
-            } else {
-                return List.of();
-            }
-        }
-         */
 
         // \n____\n______\n\n\n\n\n___some code
         // in other words there is incorrect level of indentation
@@ -276,27 +294,42 @@ public class SpcLexer implements Lexer {
             return List.of(new IndentationToken(last_new_line, last_new_line, 0, 0, 1));
         }
 
+
         /* incorrect change if indentation
         class Foo:
         ____def foo():
-        _____smth_wrong
          */
-        if ((indentation_length % ctx.getIndentationLength() != 0) || (indentation_length == ctx.getIndentationLength())) {
+
+        if ( (indentation_length % ctx.getIndentationLength() != 0) || (indentation_length == ctx.getIndentationLength())) {
             return List.of();
         }
 
+        int curr_indentation_len = ctx.getIndentationLevel() * ctx.getIndentationLength();
+
         int required_level = indentation_length / ctx.getIndentationLength();
         List<Token> indent = new ArrayList<>(required_level);
-        ctx.setIndentationLength(indentation_length);
 
-        while (ctx.getIndentationLevel() != required_level) {
-            ctx.increaseIndentationLevel();
-            ctx.logger.logToken(last_new_line, last_new_line, 0, 0, "<INDENT>");
-            indent.add(new IndentationToken(last_new_line, last_new_line, 0, 0, 1));
+        if ( indentation_length > curr_indentation_len) {
+
+            while (ctx.getIndentationLevel() != required_level) {
+                ctx.increaseIndentationLevel();
+                ctx.logger.logToken(last_new_line, last_new_line, 0, 0, "<INDENT>");
+                indent.add(new IndentationToken(last_new_line, last_new_line, 0, 0, 1));
+            }
+            return indent;
+        } else {
+            System.out.println(required_level + " " + ctx.getIndentationLevel());
+
+            while (ctx.getIndentationLevel() != required_level) {
+                ctx.decreaseIndentationLevel();
+                ctx.logger.logToken(last_new_line, last_new_line, 0, 0, "<DEDENT>");
+                indent.add(new IndentationToken(last_new_line, last_new_line, 0, 0, -1));
+            }
+            return indent;
         }
-
-        return indent;
     }
+
+
 
 
     // function that scan comment doesn't return token. It only modifies context.
@@ -622,6 +655,11 @@ public class SpcLexer implements Lexer {
 
         public void increaseIndentationLevel() {
             this.indentation_level++;
+        }
+
+        public void decreaseIndentationLevel() {
+            assert indentation_level > 0;
+            this.indentation_level--;
         }
 
         public int getIndentationLength() {

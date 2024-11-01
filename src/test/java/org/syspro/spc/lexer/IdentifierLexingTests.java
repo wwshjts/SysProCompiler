@@ -60,7 +60,7 @@ public class IdentifierLexingTests {
         SpcLexer.ResultOfLexing resultOfLexing = lexer.spcLex(input);
         List<Token> tokens = (resultOfLexing).lex_result;
 
-        Token tkn = tokens.getLast();
+        Token tkn = tokens.get(1);
         Assertions.assertInstanceOf(IdentifierToken.class, tkn);
         Keyword keyword = ((IdentifierToken) tkn).contextualKeyword;
         Assertions.assertNull(keyword);
