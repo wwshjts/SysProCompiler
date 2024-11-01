@@ -53,4 +53,12 @@ public class UnicodeUtils {
     public static boolean isSurrogate(int cp) {
         return Character.isSupplementaryCodePoint(cp);
     }
+
+    public static boolean isHexDigit(String s) {
+        assert s.length() == 1;
+        return switch (s) {
+            case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "F" -> true;
+            default -> false;
+        };
+    }
 }

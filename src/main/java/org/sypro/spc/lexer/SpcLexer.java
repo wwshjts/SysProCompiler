@@ -18,8 +18,7 @@ public class SpcLexer implements Lexer {
     public ResultOfLexing spcLex(String s) {
         LinkedList<Token> tokens = new LinkedList<>();
         Context ctx = new Context(s);
-        //System.out.println("Test:\n");
-        //System.out.println(ctx.input);
+ //       System.out.println(ctx.input);
 
         while (ctx.has()) {
             tokens.addAll(scanToken(ctx));
@@ -67,7 +66,6 @@ public class SpcLexer implements Lexer {
             tokens.addAll(drop);
         }
 
-        System.out.println(tokens);
 
         return new ResultOfLexing(tokens, ctx.logger, ctx.input);
     }
@@ -198,6 +196,8 @@ public class SpcLexer implements Lexer {
 
             case "'" -> scanRune(start_pos, leading_trivia_len, ctx);
 
+            case "\"" -> scanStringLiteral(start_pos, leading_trivia_len, ctx);
+
             // scan integer
             case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" -> scanInteger(start_pos, leading_trivia_len, ctx);
 
@@ -318,7 +318,6 @@ public class SpcLexer implements Lexer {
             }
             return indent;
         } else {
-            System.out.println(required_level + " " + ctx.getIndentationLevel());
 
             while (ctx.getIndentationLevel() != required_level) {
                 ctx.decreaseIndentationLevel();
@@ -444,8 +443,17 @@ public class SpcLexer implements Lexer {
 
             // TODO: ugly
             Optional<Integer> value = evalShortEscape(ctx);
+            next = ctx.seek();
+
+            if (next.isEmpty() || !next.get().equals("'")) {
+                value = Optional.empty();
+            }
+
             if (value.isEmpty()) {
                 value = evalUnicodeEscape(ctx);
+                if (ctx.hasNext()) {
+                    ctx.next();
+                }
             }
 
             if (value.isEmpty()) {
@@ -467,6 +475,47 @@ public class SpcLexer implements Lexer {
         }
 
         return new RuneLiteralToken(start, ctx.getIndex(), leadingTriviaLength, 0, rune_value);
+    }
+
+    private static Token scanStringLiteral(int start, int leadingTriviaLength, Context ctx) {
+        Optional<String> next = ctx.seek();
+        StringBuilder sb = new StringBuilder();
+
+        while (next.isPresent() && !next.get().equals("\"")) {
+            ctx.next();
+            String curr = ctx.get();
+            next = ctx.seek();
+
+            if (ctx.get().equals("\\") && next.isPresent()) {
+
+                Optional<Integer> value = evalShortEscape(ctx);
+                if (value.isEmpty()) {
+                    value = evalUnicodeEscape(ctx);
+                }
+
+                if (value.isPresent()) {
+                    sb.append(Character.toString(value.get()));
+                    System.out.println( "curr " + ctx.get() + " " + ctx.seek() );
+                    next = ctx.seek();
+                } else {
+                    return new BadToken(start, ctx.index, leadingTriviaLength, 0);
+                }
+
+                if (!ctx.hasNext()) {
+                    break;
+                }
+
+            } else {
+                sb.append(curr);
+            }
+        }
+
+        if (next.isEmpty() || !next.get().equals("\"")) {
+            return new BadToken(start, ctx.index, leadingTriviaLength, 0);
+        }
+        ctx.next();
+
+        return new StringLiteralToken(start, ctx.index, leadingTriviaLength, 0, sb.toString());
     }
 
     private static Optional<Integer> evalShortEscape(Context ctx) {
@@ -494,7 +543,7 @@ public class SpcLexer implements Lexer {
             default -> -1;
         };
 
-        if ((cp < 0) || !end_of_rune.equals("'")) {
+        if (cp < 0) {
             ctx.back(2);
             return Optional.empty();
         }
@@ -520,10 +569,11 @@ public class SpcLexer implements Lexer {
             return Optional.empty();
         }
 
+
         Optional<String> next = ctx.seek();
         StringBuilder sb = new StringBuilder();
 
-        while (next.isPresent() && !next.get().equals("'")) {
+        while (next.isPresent() && UnicodeUtils.isHexDigit(next.get()) && (look_ahead < 7)) {
             ctx.next();
             next = ctx.seek();
             look_ahead++;
@@ -534,9 +584,6 @@ public class SpcLexer implements Lexer {
             ctx.back(look_ahead);
             return Optional.empty();
         }
-
-        ctx.next();
-        look_ahead++;
 
         try {
             return Optional.of(Integer.parseInt(sb.toString(), 16));
