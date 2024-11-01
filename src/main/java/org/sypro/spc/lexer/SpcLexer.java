@@ -18,7 +18,7 @@ public class SpcLexer implements Lexer {
     public ResultOfLexing spcLex(String s) {
         LinkedList<Token> tokens = new LinkedList<>();
         Context ctx = new Context(s);
- //       System.out.println(ctx.input);
+        System.out.println(ctx.input);
 
         while (ctx.has()) {
             tokens.addAll(scanToken(ctx));
@@ -300,11 +300,13 @@ public class SpcLexer implements Lexer {
         ____def foo():
          */
 
-        if ( (indentation_length % ctx.getIndentationLength() != 0) || (indentation_length == ctx.getIndentationLength())) {
+
+        if ( (indentation_length % ctx.getIndentationLength() != 0)) {
             return List.of();
         }
 
         int curr_indentation_len = ctx.getIndentationLevel() * ctx.getIndentationLength();
+
 
         int required_level = indentation_length / ctx.getIndentationLength();
         List<Token> indent = new ArrayList<>(required_level);
@@ -318,7 +320,6 @@ public class SpcLexer implements Lexer {
             }
             return indent;
         } else {
-
             while (ctx.getIndentationLevel() != required_level) {
                 ctx.decreaseIndentationLevel();
                 ctx.logger.logToken(last_new_line, last_new_line, 0, 0, "<DEDENT>");
@@ -495,7 +496,6 @@ public class SpcLexer implements Lexer {
 
                 if (value.isPresent()) {
                     sb.append(Character.toString(value.get()));
-                    System.out.println( "curr " + ctx.get() + " " + ctx.seek() );
                     next = ctx.seek();
                 } else {
                     return new BadToken(start, ctx.index, leadingTriviaLength, 0);
