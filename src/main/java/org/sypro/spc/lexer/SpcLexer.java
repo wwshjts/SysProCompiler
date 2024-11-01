@@ -18,7 +18,6 @@ public class SpcLexer implements Lexer {
     public ResultOfLexing spcLex(String s) {
         LinkedList<Token> tokens = new LinkedList<>();
         Context ctx = new Context(s);
-        System.out.println(ctx.input);
 
         while (ctx.has()) {
             tokens.addAll(scanToken(ctx));
@@ -189,7 +188,7 @@ public class SpcLexer implements Lexer {
             case "(" -> new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, Symbol.OPEN_PAREN);
             case ")" -> new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, Symbol.CLOSE_PAREN);
             case "=" -> {
-                Symbol s = scanNextSymbol(ctx, "&") ? Symbol.EQUALS_EQUALS : Symbol.EQUALS;
+                Symbol s = scanNextSymbol(ctx, "=") ? Symbol.EQUALS_EQUALS : Symbol.EQUALS;
                 yield new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, s);
             }
             case "?" -> new SymbolToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, Symbol.QUESTION);
