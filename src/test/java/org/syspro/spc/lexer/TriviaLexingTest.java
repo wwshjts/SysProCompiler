@@ -172,7 +172,7 @@ public class TriviaLexingTest {
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
 
         List<Logger.Log> expected = Arrays.asList(
-                new Logger.Log(1, 1, 0, 0, "<INDENT>"),
+                new Logger.Log(0, 1, 0, 0, "<INDENT>"),
                 new Logger.Log(0, 4, 4, 0, "."),
                 new Logger.Log(5, 8, 3, 0, "."),
                 new Logger.Log(input.length(), input.length(), 0, 0, "<DEDENT>")
@@ -189,7 +189,7 @@ public class TriviaLexingTest {
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
 
         List<Logger.Log> expected = Arrays.asList(
-                new Logger.Log(1, 1, 0, 0, "<INDENT>"),
+                new Logger.Log(0, 1, 0, 0, "<INDENT>"),
                 new Logger.Log(0, 4, 4, 0, "."),
                 new Logger.Log(5, 5, 0, 0, "<INDENT>"),
                 new Logger.Log(5, 8, 3, 0, "."),
@@ -208,7 +208,7 @@ public class TriviaLexingTest {
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
 
         List<Logger.Log> expected = Arrays.asList(
-                new Logger.Log(1, 1, 0, 0, "<INDENT>"),
+                new Logger.Log(0, 1, 0, 0, "<INDENT>"),
                 new Logger.Log(0, 4, 4, 0, "."),
                 new Logger.Log(5, 5, 0, 0, "<INDENT>"),
                 new Logger.Log(5, 5, 0, 0, "<INDENT>"),
