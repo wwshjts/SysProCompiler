@@ -12,8 +12,9 @@ public class Logger {
     private final List<Log> logs = new ArrayList<>();
     private final boolean loggingEnabled = true;
 
-    public void logToken(int start, int end, int leadingTriviaLength, int trailingTriviaLength, String strRepresentation) {
-        logs.add(new Log(start, end, leadingTriviaLength, trailingTriviaLength, strRepresentation));
+
+    public void logTokenLexStage(int start, int end, int leadingTriviaLength, int trailingTriviaLength, String strRepresentation) {
+        logs.add(new Log(start, end, leadingTriviaLength, trailingTriviaLength, strRepresentation, SpcComponent.LEXER));
     }
 
     public String toString() {
@@ -24,13 +25,18 @@ public class Logger {
         return logs;
     }
 
+    public static Log lexLogOf(int start, int end, int leadingTriviaLength, int trailingTriviaLength, String strRepresentation) {
+        return new Log(start, end, leadingTriviaLength,  trailingTriviaLength, strRepresentation, SpcComponent.LEXER);
+    }
+
 
     // represent lexer log
-    public record Log(int start, int end, int leadingTriviaLength, int trailingTriviaLength, String strRepresentation) {
+    public record Log(int start, int end, int leadingTriviaLength, int trailingTriviaLength, String strRepresentation, SpcComponent component)  {
 
         @Override
         public String toString() {
-            return "Token start: " + start + "\n" +
+            return "Component: " + component + "\n" +
+                    "Token start: " + start + "\n" +
                     "Token end: " + end + "\n" +
                     "Leading Trivia: " + leadingTriviaLength + "\n" +
                     "Trailing Trivia: " + trailingTriviaLength + "\n" +
@@ -38,11 +44,11 @@ public class Logger {
         }
 
         public Log withEnd(int end) {
-            return new Log(start, end, leadingTriviaLength, trailingTriviaLength, strRepresentation);
+            return new Log(start, end, leadingTriviaLength, trailingTriviaLength, strRepresentation, component);
         }
 
         public Log withTrailingTriviaLength(int trailingTriviaLength) {
-            return new Log(start, end, leadingTriviaLength, trailingTriviaLength, strRepresentation);
+            return new Log(start, end, leadingTriviaLength, trailingTriviaLength, strRepresentation, component);
         }
     }
 }

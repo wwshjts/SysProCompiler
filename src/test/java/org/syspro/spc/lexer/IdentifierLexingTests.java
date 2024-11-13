@@ -26,8 +26,8 @@ public class IdentifierLexingTests {
         List<Token> tokens = (resultOfLexing).lex_result;
 
         List<Logger.Log> expected = List.of(
-                new Logger.Log(0, 3, 0, 0, "true"),
-                new Logger.Log(4, input.length() - 1, 1, 0, "false")
+                Logger.lexLogOf(0, 3, 0, 0, "true"),
+                Logger.lexLogOf(4, input.length() - 1, 1, 0, "false")
         );
 
         Assertions.assertEquals(expected, result);

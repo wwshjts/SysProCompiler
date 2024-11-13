@@ -7,7 +7,6 @@ import org.sypro.spc.lexer.SpcLexer;
 import syspro.tm.lexer.Token;
 import utils.Logger;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -20,8 +19,8 @@ public class TriviaLexingTest {
         SpcLexer lex = new SpcLexer();
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
         List<Logger.Log> expected = List.of(
-                new Logger.Log(0, 0, 0,0, "<INDENT>"),
-                new Logger.Log(input.length(), input.length(), 0,0, "<DEDENT>")
+                Logger.lexLogOf(0, 0, 0,0, "<INDENT>"),
+                Logger.lexLogOf(input.length(), input.length(), 0,0, "<DEDENT>")
 
         );
         Assertions.assertEquals(expected, result);
@@ -35,9 +34,9 @@ public class TriviaLexingTest {
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
 
         List<Logger.Log> expected = Arrays.asList(
-                new Logger.Log(0, 0, 0, 0, "<INDENT>"),
-                new Logger.Log(0, 3, 3, 0, "."),
-                new Logger.Log(input.length(), input.length(), 0, 0, "<DEDENT>")
+                Logger.lexLogOf(0, 0, 0, 0, "<INDENT>"),
+                Logger.lexLogOf(0, 3, 3, 0, "."),
+                Logger.lexLogOf(input.length(), input.length(), 0, 0, "<DEDENT>")
         );
 
         Assertions.assertEquals(expected, result);
@@ -65,9 +64,9 @@ public class TriviaLexingTest {
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
 
         List<Logger.Log> expected = Arrays.asList(
-                new Logger.Log(0, 0, 0, 0, "<INDENT>"),
-                new Logger.Log(0, 4, 3, 1, "."),
-                new Logger.Log(4, 4, 0, 0, "<DEDENT>")
+                Logger.lexLogOf(0, 0, 0, 0, "<INDENT>"),
+                Logger.lexLogOf(0, 4, 3, 1, "."),
+                Logger.lexLogOf(4, 4, 0, 0, "<DEDENT>")
         );
 
         Assertions.assertEquals(expected, result);
@@ -81,9 +80,9 @@ public class TriviaLexingTest {
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
 
         List<Logger.Log> expected = Arrays.asList(
-                new Logger.Log(1, 1, 0, 0, "<INDENT>"),
-                new Logger.Log(0, input.codePointCount(0, input.length()) - 1, 4, 2, "."),
-                new Logger.Log(input.length() - 1, input.length() - 1, 0, 0, "<DEDENT>")
+                Logger.lexLogOf(0, 1, 0, 0, "<INDENT>"),
+                Logger.lexLogOf(0, input.codePointCount(0, input.length()) - 1, 4, 2, "."),
+                Logger.lexLogOf(input.length() - 2, input.length() - 1, 0, 0, "<DEDENT>")
         );
 
         Assertions.assertEquals(expected, result);
@@ -97,9 +96,9 @@ public class TriviaLexingTest {
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
 
         List<Logger.Log> expected = Arrays.asList(
-                new Logger.Log(1, 1, 0, 0, "<INDENT>"),
-                new Logger.Log(0, input.codePointCount(0, input.length()) - 1, 4, 7, "."),
-                new Logger.Log(input.length() - 1, input.length() - 1, 0, 0, "<DEDENT>")
+                Logger.lexLogOf(0, 1, 0, 0, "<INDENT>"),
+                Logger.lexLogOf(0, input.codePointCount(0, input.length()) - 1, 4, 7, "."),
+                Logger.lexLogOf(input.length() - 2, input.length() - 1, 0, 0, "<DEDENT>")
         );
 
         Assertions.assertEquals(expected, result);
@@ -113,9 +112,9 @@ public class TriviaLexingTest {
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
 
         List<Logger.Log> expected = Arrays.asList(
-                new Logger.Log(1, 1, 0, 0, "<INDENT>"),
-                new Logger.Log(0, input.length() - 1, 4, 4, "."),
-                new Logger.Log(input.length(), input.length(), 0, 0, "<DEDENT>")
+                Logger.lexLogOf(0, 1, 0, 0, "<INDENT>"),
+                Logger.lexLogOf(0, input.length() - 1, 4, 4, "."),
+                Logger.lexLogOf(input.length(), input.length(), 0, 0, "<DEDENT>")
         );
 
         Assertions.assertEquals(expected, result);
@@ -130,13 +129,13 @@ public class TriviaLexingTest {
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
 
         List<Logger.Log> expected = Arrays.asList(
-                new Logger.Log(0, 1, 0, 0, "<<"),
-                new Logger.Log(2, 2, 0, 0, "<INDENT>"),
-                new Logger.Log(2, 5, 3, 0, "."),
-                new Logger.Log(6, 6, 0, 0, "<INDENT>"),
-                new Logger.Log(6, input.codePointCount(0, input.length()) - 1, 3, 0, "."),
-                new Logger.Log(input.length(), input.length(), 0, 0, "<DEDENT>"),
-                new Logger.Log(input.length(), input.length(), 0, 0, "<DEDENT>")
+                Logger.lexLogOf(0, 1, 0, 0, "<<"),
+                Logger.lexLogOf(2, 2, 0, 0, "<INDENT>"),
+                Logger.lexLogOf(2, 5, 3, 0, "."),
+                Logger.lexLogOf(6, 6, 0, 0, "<INDENT>"),
+                Logger.lexLogOf(6, input.codePointCount(0, input.length()) - 1, 3, 0, "."),
+                Logger.lexLogOf(input.length(), input.length(), 0, 0, "<DEDENT>"),
+                Logger.lexLogOf(input.length(), input.length(), 0, 0, "<DEDENT>")
 
         );
 
@@ -151,13 +150,13 @@ public class TriviaLexingTest {
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
 
         List<Logger.Log> expected = Arrays.asList(
-                new Logger.Log(0, 1, 0, 0, "<<"),
-                new Logger.Log(2, 2, 0, 0, "<INDENT>"),
-                new Logger.Log(2, 5, 3, 0, "."),
-                new Logger.Log(6, 6, 0, 0, "<INDENT>"),
-                new Logger.Log(6, input.codePointCount(0, input.length()) - 1, 3, 1, "."),
-                new Logger.Log(input.length() - 1, input.length() - 1, 0, 0, "<DEDENT>"),
-                new Logger.Log(input.length() - 1, input.length() - 1, 0, 0, "<DEDENT>")
+                Logger.lexLogOf(0, 1, 0, 0, "<<"),
+                Logger.lexLogOf(2, 2, 0, 0, "<INDENT>"),
+                Logger.lexLogOf(2, 5, 3, 0, "."),
+                Logger.lexLogOf(6, 6, 0, 0, "<INDENT>"),
+                Logger.lexLogOf(6, input.codePointCount(0, input.length()) - 1, 3, 1, "."),
+                Logger.lexLogOf(input.length() - 1, input.length() - 1, 0, 0, "<DEDENT>"),
+                Logger.lexLogOf(input.length() - 1, input.length() - 1, 0, 0, "<DEDENT>")
         );
 
         Assertions.assertEquals(expected, result);
@@ -172,10 +171,10 @@ public class TriviaLexingTest {
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
 
         List<Logger.Log> expected = Arrays.asList(
-                new Logger.Log(0, 1, 0, 0, "<INDENT>"),
-                new Logger.Log(0, 4, 4, 0, "."),
-                new Logger.Log(5, 8, 3, 0, "."),
-                new Logger.Log(input.length(), input.length(), 0, 0, "<DEDENT>")
+                Logger.lexLogOf(0, 1, 0, 0, "<INDENT>"),
+                Logger.lexLogOf(0, 4, 4, 0, "."),
+                Logger.lexLogOf(5, 8, 3, 0, "."),
+                Logger.lexLogOf(input.length(), input.length(), 0, 0, "<DEDENT>")
         );
 
         Assertions.assertEquals(expected, result);
@@ -189,12 +188,12 @@ public class TriviaLexingTest {
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
 
         List<Logger.Log> expected = Arrays.asList(
-                new Logger.Log(0, 1, 0, 0, "<INDENT>"),
-                new Logger.Log(0, 4, 4, 0, "."),
-                new Logger.Log(5, 5, 0, 0, "<INDENT>"),
-                new Logger.Log(5, 8, 3, 0, "."),
-                new Logger.Log(input.length(), input.length(), 0, 0, "<DEDENT>"),
-                new Logger.Log(input.length(), input.length(), 0, 0, "<DEDENT>")
+                Logger.lexLogOf(0, 1, 0, 0, "<INDENT>"),
+                Logger.lexLogOf(0, 4, 4, 0, "."),
+                Logger.lexLogOf(5, 5, 0, 0, "<INDENT>"),
+                Logger.lexLogOf(5, 8, 3, 0, "."),
+                Logger.lexLogOf(input.length(), input.length(), 0, 0, "<DEDENT>"),
+                Logger.lexLogOf(input.length(), input.length(), 0, 0, "<DEDENT>")
         );
 
         Assertions.assertEquals(expected, result);
@@ -208,16 +207,16 @@ public class TriviaLexingTest {
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
 
         List<Logger.Log> expected = Arrays.asList(
-                new Logger.Log(0, 1, 0, 0, "<INDENT>"),
-                new Logger.Log(0, 4, 4, 0, "."),
-                new Logger.Log(5, 5, 0, 0, "<INDENT>"),
-                new Logger.Log(5, 5, 0, 0, "<INDENT>"),
-                new Logger.Log(5, 5, 0, 0, "<INDENT>"),
-                new Logger.Log(5, 11, 5, 1, "."),
-                new Logger.Log(input.length() - 1, input.length() - 1, 0, 0, "<DEDENT>"),
-                new Logger.Log(input.length() - 1, input.length() - 1, 0, 0, "<DEDENT>"),
-                new Logger.Log(input.length() - 1, input.length() - 1, 0, 0, "<DEDENT>"),
-                new Logger.Log(input.length() - 1, input.length() - 1, 0, 0, "<DEDENT>")
+                Logger.lexLogOf(0, 1, 0, 0, "<INDENT>"),
+                Logger.lexLogOf(0, 4, 4, 0, "."),
+                Logger.lexLogOf(5, 5, 0, 0, "<INDENT>"),
+                Logger.lexLogOf(5, 5, 0, 0, "<INDENT>"),
+                Logger.lexLogOf(5, 5, 0, 0, "<INDENT>"),
+                Logger.lexLogOf(5, 11, 5, 1, "."),
+                Logger.lexLogOf(input.length() - 1, input.length() - 1, 0, 0, "<DEDENT>"),
+                Logger.lexLogOf(input.length() - 1, input.length() - 1, 0, 0, "<DEDENT>"),
+                Logger.lexLogOf(input.length() - 1, input.length() - 1, 0, 0, "<DEDENT>"),
+                Logger.lexLogOf(input.length() - 1, input.length() - 1, 0, 0, "<DEDENT>")
         );
 
         Assertions.assertEquals(expected, result);
@@ -252,14 +251,14 @@ public class TriviaLexingTest {
         List<Token> tokens = (resultOfLexing).lex_result;
 
         List<Logger.Log> expected = List.of(
-                new Logger.Log(0,0,0, 0,"."),
-                new Logger.Log(1,1, 0,0, "<INDENT>"),
-                new Logger.Log(1,3,2, 0,"."),
-                new Logger.Log(4,4, 0,0, "<INDENT>"),
-                new Logger.Log(4,7,3, 0,"."),
-                new Logger.Log(12,12, 0,0, "<DEDENT>"),
-                new Logger.Log(12,12, 0,0, "<DEDENT>"),
-                new Logger.Log(8,13,5, 0,".")
+                Logger.lexLogOf(0,0,0, 0,"."),
+                Logger.lexLogOf(1,1, 0,0, "<INDENT>"),
+                Logger.lexLogOf(1,3,2, 0,"."),
+                Logger.lexLogOf(4,4, 0,0, "<INDENT>"),
+                Logger.lexLogOf(4,7,3, 0,"."),
+                Logger.lexLogOf(12,12, 0,0, "<DEDENT>"),
+                Logger.lexLogOf(12,12, 0,0, "<DEDENT>"),
+                Logger.lexLogOf(8,13,5, 0,".")
 
         );
 

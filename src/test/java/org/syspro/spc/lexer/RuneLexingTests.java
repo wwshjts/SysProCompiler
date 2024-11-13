@@ -4,8 +4,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.sypro.spc.lexer.SpcLexer;
-import syspro.tm.lexer.BadToken;
-import syspro.tm.lexer.Token;
 import utils.Logger;
 
 import java.util.List;
@@ -18,7 +16,7 @@ public class RuneLexingTests {
         SpcLexer lex = new SpcLexer();
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
         List<Logger.Log> expected = List.of(
-                new Logger.Log(0, 2, 0, 0, "'\\U+0009'")
+                Logger.lexLogOf(0, 2, 0, 0, "'\\U+0009'")
         );
 
         Assertions.assertEquals(expected, result);
@@ -33,7 +31,7 @@ public class RuneLexingTests {
 
         // TODO: report bug with string representation of rune token
         List<Logger.Log> expected = List.of(
-                new Logger.Log(0, input.length() - 1, 0, 0, "'\\U+129302'")
+                Logger.lexLogOf(0, input.length() - 1, 0, 0, "'\\U+129302'")
         );
 
         Assertions.assertEquals(expected, result);
@@ -48,7 +46,7 @@ public class RuneLexingTests {
 
         // TODO: report bug with string representation of rune token
         List<Logger.Log> expected = List.of(
-                new Logger.Log(0, 2, 0, 0, "'\\U+129302'")
+                Logger.lexLogOf(0, 2, 0, 0, "'\\U+129302'")
         );
 
         Assertions.assertEquals(expected, result);

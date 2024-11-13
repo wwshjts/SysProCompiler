@@ -58,7 +58,7 @@ public class SpcLexer implements Lexer {
             int levels_to_drop = ctx.dropIndent();
             List<Token> drop = new ArrayList<>(levels_to_drop);
             for (int i = 0; i < levels_to_drop; i++) {
-                ctx.logger.logToken(ctx.index, ctx.index, 0, 0, "<DEDENT>");
+                ctx.logger.logTokenLexStage(ctx.index, ctx.index, 0, 0, "<DEDENT>");
                 drop.add(new IndentationToken(ctx.index, ctx.index, 0, 0, -1));
             }
 
@@ -205,7 +205,7 @@ public class SpcLexer implements Lexer {
         };
 
         res.add(tkn);
-        ctx.logger.logToken(start_pos, ctx.getIndex(), leading_trivia_len, 0, tkn.toString());
+        ctx.logger.logTokenLexStage(start_pos, ctx.getIndex(), leading_trivia_len, 0, tkn.toString());
 
         return res;
     }
@@ -278,7 +278,7 @@ public class SpcLexer implements Lexer {
             assert levels_to_drop >= 0;
             List<Token> drop = new ArrayList<>(levels_to_drop);
             for (int i = 0; i < levels_to_drop; i++) {
-                ctx.logger.logToken(begin, last_new_line, 0, 0, "<DEDENT>");
+                ctx.logger.logTokenLexStage(begin, last_new_line, 0, 0, "<DEDENT>");
                 drop.add(new IndentationToken(begin, last_new_line, 0, 0, -1));
             }
 
@@ -298,7 +298,7 @@ public class SpcLexer implements Lexer {
         if (ctx.getIndentationLevel() == 0) {
             ctx.increaseIndentationLevel();
             ctx.setIndentationLength(indentation_length);
-            ctx.logger.logToken(begin, last_new_line, 0, 0, "<INDENT>");
+            ctx.logger.logTokenLexStage(begin, last_new_line, 0, 0, "<INDENT>");
             return List.of(new IndentationToken(begin, last_new_line, 0, 0, 1));
         }
 
@@ -323,14 +323,14 @@ public class SpcLexer implements Lexer {
 
             while (ctx.getIndentationLevel() != required_level) {
                 ctx.increaseIndentationLevel();
-                ctx.logger.logToken(begin, last_new_line, 0, 0, "<INDENT>");
+                ctx.logger.logTokenLexStage(begin, last_new_line, 0, 0, "<INDENT>");
                 indent.add(new IndentationToken(begin, last_new_line, 0, 0, 1));
             }
             return indent;
         } else {
             while (ctx.getIndentationLevel() != required_level) {
                 ctx.decreaseIndentationLevel();
-                ctx.logger.logToken(begin, last_new_line, 0, 0, "<DEDENT>");
+                ctx.logger.logTokenLexStage(begin, last_new_line, 0, 0, "<DEDENT>");
                 indent.add(new IndentationToken(begin, last_new_line, 0, 0, -1));
             }
             return indent;

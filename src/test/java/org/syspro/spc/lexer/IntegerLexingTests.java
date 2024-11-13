@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.sypro.spc.lexer.SpcLexer;
 import utils.Logger;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class IntegerLexingTests {
@@ -17,7 +16,7 @@ public class IntegerLexingTests {
         SpcLexer lex = new SpcLexer();
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
         List<Logger.Log> expected = List.of(
-                new Logger.Log(0, 1, 0, 0, "42")
+                Logger.lexLogOf(0, 1, 0, 0, "42")
         );
         Assertions.assertEquals(expected, result);
     }
@@ -29,7 +28,7 @@ public class IntegerLexingTests {
         SpcLexer lex = new SpcLexer();
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
         List<Logger.Log> expected = List.of(
-                new Logger.Log(0, 4, 0, 0, "42i32")
+                Logger.lexLogOf(0, 4, 0, 0, "42i32")
         );
         Assertions.assertEquals(expected, result);
     }
@@ -41,7 +40,7 @@ public class IntegerLexingTests {
         SpcLexer lex = new SpcLexer();
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
         List<Logger.Log> expected = List.of(
-                new Logger.Log(0, 4, 0, 0, "42u32")
+                Logger.lexLogOf(0, 4, 0, 0, "42u32")
         );
         Assertions.assertEquals(expected, result);
     }
@@ -53,7 +52,7 @@ public class IntegerLexingTests {
         SpcLexer lex = new SpcLexer();
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
         List<Logger.Log> expected = List.of(
-                new Logger.Log(0, 4, 0, 0, "42i64")
+                Logger.lexLogOf(0, 4, 0, 0, "42i64")
         );
         Assertions.assertEquals(expected, result);
     }
@@ -65,7 +64,7 @@ public class IntegerLexingTests {
         SpcLexer lex = new SpcLexer();
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
         List<Logger.Log> expected = List.of(
-                new Logger.Log(0, 4, 0, 0, "42u64")
+                Logger.lexLogOf(0, 4, 0, 0, "42u64")
         );
         Assertions.assertEquals(expected, result);
     }
@@ -77,9 +76,9 @@ public class IntegerLexingTests {
         SpcLexer lex = new SpcLexer();
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
         List<Logger.Log> expected = List.of(
-                new Logger.Log(0, 15,11, 0, "21u64"),
-                new Logger.Log(16, 20,4, 0, "+"),
-                new Logger.Log(21, input.length() - 1, 3, 1, "21i64")
+                Logger.lexLogOf(0, 15,11, 0, "21u64"),
+                Logger.lexLogOf(16, 20,4, 0, "+"),
+                Logger.lexLogOf(21, input.length() - 1, 3, 1, "21i64")
         );
         Assertions.assertEquals(expected, result);
     }
@@ -91,9 +90,9 @@ public class IntegerLexingTests {
         SpcLexer lex = new SpcLexer();
         List<Logger.Log> result = (lex.spcLex(input)).logger.toList();
         List<Logger.Log> expected = List.of(
-                new Logger.Log(0, 1, 0, 0, "42"),
-                new Logger.Log(2, 3, 0,0, "u6"),
-                new Logger.Log(4, 7, 1,0, "foo")
+                Logger.lexLogOf(0, 1, 0, 0, "42"),
+                Logger.lexLogOf(2, 3, 0,0, "u6"),
+                Logger.lexLogOf(4, 7, 1,0, "foo")
         );
     }
 }
