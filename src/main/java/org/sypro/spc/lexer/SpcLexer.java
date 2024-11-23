@@ -38,8 +38,6 @@ public class SpcLexer implements Lexer {
                 last_tkn_index--;
             }
 
-
-
             if (last_tkn_index >= 0) {
 
                 Logger.Log  last_log = logs.get(last_tkn_index);
@@ -246,7 +244,7 @@ public class SpcLexer implements Lexer {
 
         int last_new_line = ctx.index;
         int indentation_length = 0;
-        int last_cr_index = 0;
+        int last_cr_index = -1;
 
         while (next.isPresent() && (UnicodeUtils.isSpace(next.get()) || (UnicodeUtils.isNewLine(next.get())))) {
             if (ctx.get().equals("\r")) {
@@ -265,7 +263,7 @@ public class SpcLexer implements Lexer {
 
         // *code*\n\t\t\t\n*code*
 
-        int begin = last_new_line - last_cr_index == 1 ? last_cr_index : last_new_line;
+        int begin = (last_cr_index >= 0) && (last_new_line - last_cr_index == 1) ? last_cr_index : last_new_line;
         // situation like that *some_code*\n____
         // or *some_code*\n*code*
         if (next.isEmpty() || indentation_length == 0) {
