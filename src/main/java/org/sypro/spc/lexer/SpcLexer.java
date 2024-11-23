@@ -254,7 +254,6 @@ public class SpcLexer implements Lexer {
             if (UnicodeUtils.isNewLine(ctx.get())) {
                 last_new_line = ctx.index;
                 indentation_length = 0;
-                System.out.println(last_cr_index + " " + last_new_line);
             } else {
                 indentation_length += UnicodeUtils.getNumberOfSpaces(ctx.get());
             }
