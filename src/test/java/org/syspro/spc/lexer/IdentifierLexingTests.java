@@ -4,10 +4,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.sypro.spc.lexer.SpcLexer;
-import syspro.tm.lexer.BooleanLiteralToken;
-import syspro.tm.lexer.IdentifierToken;
-import syspro.tm.lexer.Keyword;
-import syspro.tm.lexer.Token;
+import syspro.tm.lexer.*;
 import utils.Logger;
 
 import java.util.List;
@@ -46,24 +43,39 @@ public class IdentifierLexingTests {
         List<Token> tokens = (resultOfLexing).lex_result;
 
         for (Token keyword : tokens) {
-            Assertions.assertInstanceOf(IdentifierToken.class, keyword);
-            IdentifierToken contextual_keyword = (IdentifierToken) keyword;
-            Assertions.assertNotNull(contextual_keyword.contextualKeyword);
+            Assertions.assertInstanceOf(KeywordToken.class, keyword);
         }
     }
 
     @Test
     @DisplayName("Contextual identifiers")
     public void contextualIdentifier() {
-        String input = "\n  class";
+        String input = "\n  class object interface";
         SpcLexer lexer = new SpcLexer();
         SpcLexer.ResultOfLexing resultOfLexing = lexer.spcLex(input);
         List<Token> tokens = (resultOfLexing).lex_result;
 
-        Token tkn = tokens.get(1);
-        Assertions.assertInstanceOf(IdentifierToken.class, tkn);
-        Keyword keyword = ((IdentifierToken) tkn).contextualKeyword;
-        Assertions.assertNull(keyword);
+        // Remove indentation tokens
+        tokens.removeFirst();
+        tokens.removeLast();
+
+        for (Token identifier : tokens) {
+            Assertions.assertInstanceOf(IdentifierToken.class, identifier);
+            Assertions.assertNotNull( ((IdentifierToken) identifier).contextualKeyword);
+        }
+    }
+
+    @Test
+    @DisplayName("Some keywords")
+    public void keywords() {
+        String input = "this super override";
+        SpcLexer lexer = new SpcLexer();
+        SpcLexer.ResultOfLexing resultOfLexing = lexer.spcLex(input);
+        List<Token> tokens = (resultOfLexing).lex_result;
+
+        for (Token identifier : tokens) {
+            Assertions.assertInstanceOf(KeywordToken.class, identifier);
+        }
     }
 
     @Test

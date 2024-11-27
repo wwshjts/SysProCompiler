@@ -420,18 +420,50 @@ public class SpcLexer implements Lexer {
             case "false" -> new BooleanLiteralToken(start, ctx.getIndex(), leadingTriviaLength, 0, false);
             // TODO: merge this???
             case "class" -> {
-                Keyword keyword = ctx.getIndentationLevel() == 0 ? Keyword.CLASS : null;
-                yield  new IdentifierToken(start, ctx.getIndex(), leadingTriviaLength, 0, value, keyword);
+                Keyword keyword = Keyword.CLASS;
+                if (ctx.getIndentationLevel() == 0) {
+                    yield new KeywordToken(start, ctx.getIndex(), leadingTriviaLength, 0, keyword);
+                } else {
+                    yield  new IdentifierToken(start, ctx.getIndex(), leadingTriviaLength, 0, value, keyword);
+                }
             }
             case "object" -> {
-                Keyword keyword = ctx.getIndentationLevel() == 0 ? Keyword.OBJECT : null;
-                yield  new IdentifierToken(start, ctx.getIndex(), leadingTriviaLength, 0, value, keyword);
+                Keyword keyword = Keyword.OBJECT;
+                if (ctx.getIndentationLevel() == 0) {
+                    yield new KeywordToken(start, ctx.getIndex(), leadingTriviaLength, 0, keyword);
+                } else {
+                    yield  new IdentifierToken(start, ctx.getIndex(), leadingTriviaLength, 0, value, keyword);
+                }
             }
             case "interface" -> {
-                Keyword keyword = ctx.getIndentationLevel() == 0 ? Keyword.INTERFACE : null;
-                yield  new IdentifierToken(start, ctx.getIndex(), leadingTriviaLength, 0, value, keyword);
+                if (ctx.getIndentationLevel() == 0) {
+                    yield new KeywordToken(start, ctx.getIndex(), leadingTriviaLength, 0, Keyword.INTERFACE);
+                } else {
+                    yield  new IdentifierToken(start, ctx.getIndex(), leadingTriviaLength, 0, value, Keyword.INTERFACE);
+                }
             }
+            case "null" -> new IdentifierToken(start, ctx.getIndex(), leadingTriviaLength, 0, value, Keyword.NULL);
+            case "this"  -> new KeywordToken(start, ctx.getIndex(), leadingTriviaLength, 0, Keyword.THIS);
+            case "super" -> new KeywordToken(start, ctx.getIndex(), leadingTriviaLength, 0, Keyword.SUPER);
+            case "is"  -> new KeywordToken(start, ctx.getIndex(), leadingTriviaLength, 0, Keyword.IS);
+            case "if"  -> new KeywordToken(start, ctx.getIndex(), leadingTriviaLength, 0, Keyword.IF);
+            case "else" -> new KeywordToken(start, ctx.getIndex(), leadingTriviaLength, 0, Keyword.ELSE);
+            case "for"  -> new KeywordToken(start, ctx.getIndex(), leadingTriviaLength, 0, Keyword.FOR);
+            case "in"  -> new KeywordToken(start, ctx.getIndex(), leadingTriviaLength, 0, Keyword.IN);
+            case "while"  -> new KeywordToken(start, ctx.getIndex(), leadingTriviaLength, 0, Keyword.WHILE);
+            case "def"  -> new KeywordToken(start, ctx.getIndex(), leadingTriviaLength, 0, Keyword.DEF);
+            case "var"  -> new KeywordToken(start, ctx.getIndex(), leadingTriviaLength, 0, Keyword.VAR);
+            case "val"  -> new KeywordToken(start, ctx.getIndex(), leadingTriviaLength, 0, Keyword.VAL);
+            case "return" -> new KeywordToken(start, ctx.getIndex(), leadingTriviaLength, 0, Keyword.RETURN);
+            case "break" -> new KeywordToken(start, ctx.getIndex(), leadingTriviaLength, 0, Keyword.BREAK);
+            case "continue" -> new KeywordToken(start, ctx.getIndex(), leadingTriviaLength, 0, Keyword.CONTINUE);
+            case "abstract" -> new KeywordToken(start, ctx.getIndex(), leadingTriviaLength, 0, Keyword.ABSTRACT);
+            case "virtual" -> new KeywordToken(start, ctx.getIndex(), leadingTriviaLength, 0, Keyword.VIRTUAL);
+            case "override" -> new KeywordToken(start, ctx.getIndex(), leadingTriviaLength, 0, Keyword.OVERRIDE);
+            case "native" -> new KeywordToken(start, ctx.getIndex(), leadingTriviaLength, 0, Keyword.NATIVE);
+
             default -> new IdentifierToken(start, ctx.getIndex(), leadingTriviaLength, 0, value, null);
+
         };
     }
 
